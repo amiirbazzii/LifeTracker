@@ -1,0 +1,6 @@
+{
+  "name": "LifeTracker",
+  "description": "A 100% offline gamified goal and habit planner with a high-contrast monochrome design and weekly contribution matrix.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
