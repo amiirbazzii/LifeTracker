@@ -578,9 +578,6 @@ fun DashboardScreen(
                                         .clip(RoundedCornerShape(0.dp))
                                         .background(if (isDark) GridLevel0_Dark else Color(0xFFF0F0F0))
                                         .border(itemStroke, RoundedCornerShape(0.dp))
-                                        .clickable {
-                                            onSelectWeek(weekIdx)
-                                        }
                                         .testTag("week_box_current_active_$weekIdx"),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -610,33 +607,35 @@ fun DashboardScreen(
                                             else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
                                         }
 
+                                        val isDaySelected = isSelected && taskDayOfWeek == d
+                                        val dayBorder = if (isDaySelected) {
+                                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                        } else {
+                                            BorderStroke(0.5.dp, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
+                                        }
+
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .fillMaxHeight()
-                                                .background(dayColor),
+                                                .background(dayColor)
+                                                .border(dayBorder, RoundedCornerShape(0.dp))
+                                                .clickable {
+                                                    onSelectWeek(weekIdx)
+                                                    taskDayOfWeek = d
+                                                }
+                                                .testTag("active_week_day_$d"),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = d.toString(),
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontSize = 9.sp,
-                                                    fontWeight = FontWeight.Bold,
+                                                    fontWeight = if (isDaySelected) FontWeight.Black else FontWeight.Bold,
                                                     fontFamily = FontFamily.Monospace,
                                                     color = if (dayLevel > 0) MonochromeWhite 
                                                             else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                                                 )
-                                            )
-                                        }
-
-                                        if (d < 7) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(1.dp)
-                                                    .background(
-                                                        if (isDark) Color(0xFF1F1F1F) else Color(0xFFDDDDDD)
-                                                    )
                                             )
                                         }
                                     }
@@ -723,8 +722,12 @@ fun DashboardScreen(
                 .weight(1.2f)
                 .fillMaxWidth()
         ) {
-            val completedCount = state.selectedWeekTasks.count { it.isCompleted == 1 }
-            val totalCount = state.selectedWeekTasks.size
+            val dayAbbrs = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+            val filteredTasks = remember(state.selectedWeekTasks, taskDayOfWeek) {
+                state.selectedWeekTasks.filter { it.dayOfWeek == taskDayOfWeek }
+            }
+            val completedCount = filteredTasks.count { it.isCompleted == 1 }
+            val totalCount = filteredTasks.size
             val completionRate = if (totalCount == 0) 0 else (completedCount * 100 / totalCount)
 
             // Dynamic header
@@ -737,7 +740,7 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = "WEEK ${state.selectedWeekIndex + 1} : EXECUTION",
+                        text = "WEEK ${state.selectedWeekIndex + 1} - ${dayAbbrs[taskDayOfWeek - 1]} : EXECUTION",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
@@ -795,7 +798,7 @@ fun DashboardScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                if (state.selectedWeekTasks.isEmpty()) {
+                if (filteredTasks.isEmpty()) {
                     EmptyStatePanel(isHistorical = isHistorical)
                 } else {
                     LazyColumn(
@@ -803,10 +806,10 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         items(
-                            count = state.selectedWeekTasks.size,
-                            key = { index -> state.selectedWeekTasks[index].taskId }
+                            count = filteredTasks.size,
+                            key = { index -> filteredTasks[index].taskId }
                         ) { index ->
-                            val task = state.selectedWeekTasks[index]
+                            val task = filteredTasks[index]
                             TaskItemRow(
                                 task = task,
                                 isReadOnly = isHistorical,
