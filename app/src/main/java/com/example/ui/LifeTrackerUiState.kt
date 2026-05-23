@@ -11,6 +11,7 @@ sealed interface LifeTrackerUiState {
         val currentWeekIndex: Int,
         val selectedWeekIndex: Int,
         val weekColors: Map<Int, Int>, // Maps week_index -> Level (0..4)
-        val selectedWeekTasks: List<DailyTask>
+        val selectedWeekTasks: List<DailyTask>,
+        val currentWeekTasks: List<DailyTask>
     ) : LifeTrackerUiState
 }

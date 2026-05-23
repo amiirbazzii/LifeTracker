@@ -61,13 +61,15 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository) : View
 
             // Tasks corresponding to the currently selected week index
             val selectedWeekTasks = tasksGroupedByWeek[activeSelectedWeek] ?: emptyList()
+            val currentWeekTasks = tasksGroupedByWeek[currentWeek] ?: emptyList()
 
             LifeTrackerUiState.Dashboard(
                 meta = meta,
                 currentWeekIndex = currentWeek,
                 selectedWeekIndex = activeSelectedWeek,
                 weekColors = weekColors,
-                selectedWeekTasks = selectedWeekTasks
+                selectedWeekTasks = selectedWeekTasks,
+                currentWeekTasks = currentWeekTasks
             )
         }
     }.stateIn(
