@@ -10,7 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -55,10 +55,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .navigationBarsPadding(),
+                    modifier = Modifier.fillMaxSize(),
                     contentWindowInsets = WindowInsets.safeDrawing
                 ) { innerPadding ->
                     val context = LocalContext.current.applicationContext as android.app.Application
@@ -330,6 +327,7 @@ fun OnboardingScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun DashboardScreen(
     state: LifeTrackerUiState.Dashboard,
@@ -365,6 +363,7 @@ fun DashboardScreen(
     }
 
     val isHistorical = state.selectedWeekIndex < state.currentWeekIndex
+    val isKeyboardOpen = WindowInsets.isImeVisible
 
     Column(
         modifier = Modifier
@@ -494,141 +493,143 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        if (!isKeyboardOpen) {
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // --- TOP HALF: MACRO GRID WINDOW ---
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "MACRO TIMELINE MATRIX (${state.meta.totalWeeks} WEEKS)",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Zinc400,
-                        letterSpacing = 1.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                )
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "${state.meta.targetYears}Y GOAL",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 9.sp
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Scrollable Grid Matrix using exactly 13 columns mimicking HTML structure
-            Box(
+            // --- TOP HALF: MACRO GRID WINDOW ---
+            Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(0.dp))
-                    .background(if (isSystemInDarkTheme()) GridLevel0_Dark else Color(0xFFFCFCFC))
-                    .padding(4.dp)
             ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(13),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.fillMaxSize()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(state.meta.totalWeeks) { weekIdx ->
-                        val level = state.weekColors[weekIdx] ?: 0
-                        val isDark = isSystemInDarkTheme()
-                        val cellColor = when (level) {
-                            0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                            1 -> GridLevel1
-                            2 -> GridLevel2
-                            3 -> GridLevel3
-                            4 -> GridLevel4
-                            else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                        }
-
-                        val isSelected = weekIdx == state.selectedWeekIndex
-                        val isCurrent = weekIdx == state.currentWeekIndex
-
-                        val itemStroke = if (isSelected) {
-                            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                        } else if (isCurrent) {
-                            BorderStroke(1.5.dp, GridLevel4)
-                        } else {
-                            BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .clip(RoundedCornerShape(0.dp))
-                                .background(cellColor)
-                                .border(itemStroke, RoundedCornerShape(0.dp))
-                                .clickable {
-                                    onSelectWeek(weekIdx)
-                                }
-                                .testTag("week_box_$weekIdx"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = (weekIdx + 1).toString(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 7.5.sp,
-                                    fontWeight = if (isSelected || isCurrent) FontWeight.Black else FontWeight.Normal,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = if (level > 0) MonochromeWhite 
-                                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                                ),
-                                textAlign = TextAlign.Center
+                    Text(
+                        text = "MACRO TIMELINE MATRIX (${state.meta.totalWeeks} WEEKS)",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Zinc400,
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "${state.meta.targetYears}Y GOAL",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 9.sp
                             )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Scrollable Grid Matrix using exactly 13 columns mimicking HTML structure
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(0.dp))
+                        .background(if (isSystemInDarkTheme()) GridLevel0_Dark else Color(0xFFFCFCFC))
+                        .padding(4.dp)
+                ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(13),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(state.meta.totalWeeks) { weekIdx ->
+                            val level = state.weekColors[weekIdx] ?: 0
+                            val isDark = isSystemInDarkTheme()
+                            val cellColor = when (level) {
+                                0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
+                                1 -> GridLevel1
+                                2 -> GridLevel2
+                                3 -> GridLevel3
+                                4 -> GridLevel4
+                                else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
+                            }
+
+                            val isSelected = weekIdx == state.selectedWeekIndex
+                            val isCurrent = weekIdx == state.currentWeekIndex
+
+                            val itemStroke = if (isSelected) {
+                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                            } else if (isCurrent) {
+                                BorderStroke(1.5.dp, GridLevel4)
+                            } else {
+                                BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .clip(RoundedCornerShape(0.dp))
+                                    .background(cellColor)
+                                    .border(itemStroke, RoundedCornerShape(0.dp))
+                                    .clickable {
+                                        onSelectWeek(weekIdx)
+                                    }
+                                    .testTag("week_box_$weekIdx"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = (weekIdx + 1).toString(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 7.5.sp,
+                                        fontWeight = if (isSelected || isCurrent) FontWeight.Black else FontWeight.Normal,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = if (level > 0) MonochromeWhite 
+                                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            // Sub-grid footer zone: Inception dates + Legend Panel
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val yearFormatter = SimpleDateFormat("yyyy", Locale.US)
-                val inceptionYear = yearFormatter.format(Date(state.meta.inceptionTimestamp))
-                val quarter = 1 + (Calendar.getInstance().get(Calendar.MONTH) / 3)
-                Text(
-                    text = "INCEPTION: ${inceptionYear}.Q${quarter}",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 9.sp,
-                        color = Zinc500,
-                        fontWeight = FontWeight.Bold
+                // Sub-grid footer zone: Inception dates + Legend Panel
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val yearFormatter = SimpleDateFormat("yyyy", Locale.US)
+                    val inceptionYear = yearFormatter.format(Date(state.meta.inceptionTimestamp))
+                    val quarter = 1 + (Calendar.getInstance().get(Calendar.MONTH) / 3)
+                    Text(
+                        text = "INCEPTION: ${inceptionYear}.Q${quarter}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 9.sp,
+                            color = Zinc500,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
-                )
 
-                LegendPanel()
+                    LegendPanel()
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), thickness = 1.dp)
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         // --- BOTTOM HALF: MICRO PERSISTENT TASK MANAGER ---
         Column(
@@ -711,47 +712,21 @@ fun DashboardScreen(
                 if (state.selectedWeekTasks.isEmpty()) {
                     EmptyStatePanel(isHistorical = isHistorical)
                 } else {
-                    val daysGroupTitle = listOf(
-                        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-                    )
-
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        for (dayIdx in 1..7) {
-                            val dayTasks = state.selectedWeekTasks.filter { it.dayOfWeek == dayIdx }
-                            if (dayTasks.isNotEmpty()) {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                    ) {
-                                        Text(
-                                            text = daysGroupTitle[dayIdx - 1].uppercase(),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Black,
-                                                fontFamily = FontFamily.Monospace,
-                                                letterSpacing = 1.sp,
-                                                fontSize = 9.sp
-                                            ),
-                                            color = Zinc500,
-                                            modifier = Modifier.padding(bottom = 2.dp)
-                                        )
-                                        
-                                        dayTasks.forEach { task ->
-                                            TaskItemRow(
-                                                task = task,
-                                                isReadOnly = isHistorical,
-                                                onToggle = onToggleTask,
-                                                onDelete = onDeleteTask
-                                            )
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                        }
-                                    }
-                                }
-                            }
+                        items(
+                            count = state.selectedWeekTasks.size,
+                            key = { index -> state.selectedWeekTasks[index].taskId }
+                        ) { index ->
+                            val task = state.selectedWeekTasks[index]
+                            TaskItemRow(
+                                task = task,
+                                isReadOnly = isHistorical,
+                                onToggle = onToggleTask,
+                                onDelete = onDeleteTask
+                            )
                         }
                     }
                 }
@@ -993,6 +968,34 @@ fun TaskItemRow(
         }
 
         Spacer(modifier = Modifier.width(12.dp))
+
+        // Stark minimalist day badge prefix
+        val dayLabels = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+        val dayLabel = if (task.dayOfWeek in 1..7) dayLabels[task.dayOfWeek - 1] else "MON"
+        Text(
+            text = dayLabel,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black
+            ),
+            color = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) else GridLevel4,
+            modifier = Modifier
+                .background(
+                    if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f) 
+                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                    RoundedCornerShape(0.dp)
+                )
+                .border(
+                    1.dp,
+                    if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f) 
+                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    RoundedCornerShape(0.dp)
+                )
+                .padding(horizontal = 5.dp, vertical = 2.dp)
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
 
         Text(
             text = task.taskTitle.uppercase(),

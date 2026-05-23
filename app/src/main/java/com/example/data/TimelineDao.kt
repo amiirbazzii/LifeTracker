@@ -14,10 +14,10 @@ interface TimelineDao {
     @Query("DELETE FROM timeline_meta")
     suspend fun clearTimelineMeta()
 
-    @Query("SELECT * FROM daily_tasks ORDER BY created_timestamp ASC")
+    @Query("SELECT * FROM daily_tasks ORDER BY created_timestamp DESC")
     fun getAllTasks(): Flow<List<DailyTask>>
 
-    @Query("SELECT * FROM daily_tasks WHERE week_index = :weekIndex ORDER BY created_timestamp ASC")
+    @Query("SELECT * FROM daily_tasks WHERE week_index = :weekIndex ORDER BY created_timestamp DESC")
     fun getTasksForWeek(weekIndex: Int): Flow<List<DailyTask>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
