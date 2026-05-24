@@ -712,7 +712,7 @@ fun DashboardScreen(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), thickness = 1.dp)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -739,8 +739,11 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.Bottom
             ) {
                 Column {
+                    val currentDayAbbr = remember(taskDayOfWeek) {
+                        dayAbbrs.getOrElse(taskDayOfWeek - 1) { "MON" }
+                    }
                     Text(
-                        text = "WEEK ${state.selectedWeekIndex + 1} - ${dayAbbrs[taskDayOfWeek - 1]} : EXECUTION",
+                        text = "WEEK ${state.selectedWeekIndex + 1} - $currentDayAbbr : EXECUTION",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
@@ -879,8 +882,11 @@ fun DashboardScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
+                            val currentDayAbbr = remember(taskDayOfWeek) {
+                                dayAbbrs.getOrElse(taskDayOfWeek - 1) { "MON" }
+                            }
                             Text(
-                                text = dayAbbrs[taskDayOfWeek - 1],
+                                text = currentDayAbbr,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Black,
                                     fontFamily = FontFamily.Monospace,
