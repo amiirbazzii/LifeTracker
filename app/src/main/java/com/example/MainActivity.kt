@@ -30,6 +30,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -366,6 +370,27 @@ fun DashboardScreen(
     val isHistorical = state.selectedWeekIndex < state.currentWeekIndex
     val isKeyboardOpen = WindowInsets.isImeVisible
 
+    val topHalfWeight by animateFloatAsState(
+        targetValue = if (isKeyboardOpen) 0.0001f else 1f,
+        animationSpec = tween(durationMillis = 400),
+        label = "topHalfWeight"
+    )
+    val topHalfAlpha by animateFloatAsState(
+        targetValue = if (isKeyboardOpen) 0f else 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = "topHalfAlpha"
+    )
+    val spacerHeightTop by animateDpAsState(
+        targetValue = if (isKeyboardOpen) 0.dp else 12.dp,
+        animationSpec = tween(durationMillis = 400),
+        label = "spacerHeightTop"
+    )
+    val spacerHeightBot by animateDpAsState(
+        targetValue = if (isKeyboardOpen) 0.dp else 8.dp,
+        animationSpec = tween(durationMillis = 400),
+        label = "spacerHeightBot"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -494,13 +519,14 @@ fun DashboardScreen(
             }
         }
 
-        if (!isKeyboardOpen) {
-            Spacer(modifier = Modifier.height(12.dp))
+        if (topHalfWeight > 0.01f) {
+            Spacer(modifier = Modifier.height(spacerHeightTop))
 
             // --- TOP HALF: MACRO GRID WINDOW ---
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(topHalfWeight)
+                    .alpha(topHalfAlpha)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -711,9 +737,9 @@ fun DashboardScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(spacerHeightBot))
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f * topHalfAlpha), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(spacerHeightBot))
         }
 
         // --- BOTTOM HALF: MICRO PERSISTENT TASK MANAGER ---
@@ -969,34 +995,6 @@ fun DashboardScreen(
                     }
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Systemic status footer matching the minimal mockup
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "SQLITE_PERSISTENCE: ON",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 8.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                )
-            )
-            Text(
-                text = "SECURE_LOCAL_ENCRYPTION_ACTIVE",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 8.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                )
-            )
         }
     }
 }
