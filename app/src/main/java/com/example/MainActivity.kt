@@ -347,28 +347,18 @@ fun DashboardScreen(
     onDeleteTask: (String) -> Unit,
     onReset: () -> Unit
 ) {
-    val currentCalendarDay = remember {
-        val calendarDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-        when (calendarDay) {
-            Calendar.MONDAY -> 1
-            Calendar.TUESDAY -> 2
-            Calendar.WEDNESDAY -> 3
-            Calendar.THURSDAY -> 4
-            Calendar.FRIDAY -> 5
-            Calendar.SATURDAY -> 6
-            Calendar.SUNDAY -> 7
-            else -> 1
-        }
+    val currentDayOfWeekIndex = remember(state.meta.inceptionTimestamp, state.currentWeekIndex) {
+        getTodayDayIndex(state.meta.inceptionTimestamp, state.currentWeekIndex)
     }
     
     var newTaskTitle by remember { mutableStateOf("") }
-    var taskDayOfWeek by remember { mutableStateOf(currentCalendarDay) }
+    var taskDayOfWeek by remember { mutableStateOf(currentDayOfWeekIndex) }
 
     LaunchedEffect(state.selectedWeekIndex) {
         if (state.selectedWeekIndex != state.currentWeekIndex) {
             taskDayOfWeek = 1
         } else {
-            taskDayOfWeek = currentCalendarDay
+            taskDayOfWeek = currentDayOfWeekIndex
         }
     }
 
@@ -381,7 +371,7 @@ fun DashboardScreen(
     }
 
     val topHalfHeight by animateDpAsState(
-        targetValue = if (isInputFocused) 0.dp else 290.dp,
+        targetValue = if (isInputFocused) 0.dp else 185.dp,
         animationSpec = tween(durationMillis = 400),
         label = "topHalfHeight"
     )
@@ -609,7 +599,7 @@ fun DashboardScreen(
                                     val itemStroke = if (isSelected) {
                                         BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                                     } else {
-                                        BorderStroke(1.5.dp, GridLevel4)
+                                        BorderStroke(1.5.dp, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
                                     }
 
                                     Row(
@@ -647,11 +637,30 @@ fun DashboardScreen(
                                                 else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
                                             }
 
+                                            val isToday = remember(state.meta.inceptionTimestamp, weekIdx, d) {
+                                                isCellToday(state.meta.inceptionTimestamp, weekIdx, d)
+                                            }
                                             val isDaySelected = isSelected && taskDayOfWeek == d
-                                            val dayBorder = if (isDaySelected) {
-                                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                            val dayBorder = if (isToday) {
+                                                if (isDaySelected) {
+                                                    BorderStroke(2.dp, GridLevel4)
+                                                } else {
+                                                    BorderStroke(1.5.dp, GridLevel4)
+                                                }
                                             } else {
-                                                BorderStroke(0.5.dp, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
+                                                if (isDaySelected) {
+                                                    BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                                } else {
+                                                    BorderStroke(0.5.dp, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
+                                                }
+                                            }
+
+                                            val absoluteDayOfMonthText = remember(state.meta.inceptionTimestamp, weekIdx, d) {
+                                                val cal = Calendar.getInstance()
+                                                cal.timeInMillis = state.meta.inceptionTimestamp
+                                                cal.add(Calendar.WEEK_OF_YEAR, weekIdx)
+                                                cal.add(Calendar.DAY_OF_YEAR, d - 1)
+                                                cal.get(Calendar.DAY_OF_MONTH).toString()
                                             }
 
                                             Box(
@@ -668,7 +677,7 @@ fun DashboardScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
-                                                    text = d.toString(),
+                                                    text = absoluteDayOfMonthText,
                                                     style = MaterialTheme.typography.labelSmall.copy(
                                                         fontSize = 9.sp,
                                                         fontWeight = if (isDaySelected) FontWeight.Black else FontWeight.Bold,
@@ -1299,5 +1308,42 @@ fun getWeekRangeString(inceptionTimestamp: Long, weekIndex: Int): String {
         else -> {
             "$startDay - $endDay $startMonth $startYear"
         }
+    }
+}
+
+fun isCellToday(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): Boolean {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = inceptionTimestamp
+    cal.add(Calendar.WEEK_OF_YEAR, weekIndex)
+    cal.add(Calendar.DAY_OF_YEAR, dayOfWeek - 1)
+    
+    val today = Calendar.getInstance()
+    return cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+           cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+}
+
+fun getTodayDayIndex(inceptionTimestamp: Long, currentWeekIndex: Int): Int {
+    val today = Calendar.getInstance()
+    for (d in 1..7) {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = inceptionTimestamp
+        cal.add(Calendar.WEEK_OF_YEAR, currentWeekIndex)
+        cal.add(Calendar.DAY_OF_YEAR, d - 1)
+        if (cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+            cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)) {
+            return d
+        }
+    }
+    // Fallback based on standard day of week
+    val calendarDay = today.get(Calendar.DAY_OF_WEEK)
+    return when (calendarDay) {
+        Calendar.MONDAY -> 1
+        Calendar.TUESDAY -> 2
+        Calendar.WEDNESDAY -> 3
+        Calendar.THURSDAY -> 4
+        Calendar.FRIDAY -> 5
+        Calendar.SATURDAY -> 6
+        Calendar.SUNDAY -> 7
+        else -> 1
     }
 }
