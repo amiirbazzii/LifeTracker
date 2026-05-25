@@ -631,9 +631,9 @@ fun DashboardScreen(
                                                 val sr = (completed.toFloat() / total.toFloat()) * 100f
                                                 when {
                                                     sr == 0f -> 0
-                                                    sr <= 25f -> 1
-                                                    sr <= 50f -> 2
-                                                    sr <= 75f -> 3
+                                                    sr < 33f -> 1
+                                                    sr < 66f -> 2
+                                                    sr < 100f -> 3
                                                     else -> 4
                                                 }
                                             }
@@ -820,9 +820,9 @@ fun DashboardScreen(
                             val sr = (completedCount.toFloat() / totalCount.toFloat()) * 100f
                             when {
                                 sr == 0f -> 0
-                                sr <= 25f -> 1
-                                sr <= 50f -> 2
-                                sr <= 75f -> 3
+                                sr < 33f -> 1
+                                sr < 66f -> 2
+                                sr < 100f -> 3
                                 else -> 4
                             }
                         }
