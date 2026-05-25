@@ -371,7 +371,7 @@ fun DashboardScreen(
     }
 
     val topHalfHeight by animateDpAsState(
-        targetValue = if (isInputFocused) 0.dp else 185.dp,
+        targetValue = if (isInputFocused) 0.dp else 215.dp,
         animationSpec = tween(durationMillis = 400),
         label = "topHalfHeight"
     )
@@ -1259,10 +1259,9 @@ fun formatWeekRange(inceptionTimestamp: Long, weekIndex: Int): String {
 }
 
 fun getDayAbsoluteDateString(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): String {
+    val cellTimeInMillis = inceptionTimestamp + (weekIndex * 7L + (dayOfWeek - 1)) * 24L * 60L * 60L * 1000L
     val cal = Calendar.getInstance()
-    cal.timeInMillis = inceptionTimestamp
-    cal.add(Calendar.WEEK_OF_YEAR, weekIndex)
-    cal.add(Calendar.DAY_OF_YEAR, dayOfWeek - 1)
+    cal.timeInMillis = cellTimeInMillis
     
     val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
     val monthVal = cal.get(Calendar.MONTH)
@@ -1278,13 +1277,14 @@ fun getDayAbsoluteDateString(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek
 }
 
 fun getWeekRangeString(inceptionTimestamp: Long, weekIndex: Int): String {
+    val startMillis = inceptionTimestamp + (weekIndex * 7L) * 24L * 60L * 60L * 1000L
+    val endMillis = startMillis + 6L * 24L * 60L * 60L * 1000L
+    
     val startCal = Calendar.getInstance()
-    startCal.timeInMillis = inceptionTimestamp
-    startCal.add(Calendar.WEEK_OF_YEAR, weekIndex)
+    startCal.timeInMillis = startMillis
     
     val endCal = Calendar.getInstance()
-    endCal.timeInMillis = startCal.timeInMillis
-    endCal.add(Calendar.DAY_OF_YEAR, 6)
+    endCal.timeInMillis = endMillis
     
     val startDay = startCal.get(Calendar.DAY_OF_MONTH)
     val startMonthVal = startCal.get(Calendar.MONTH)
@@ -1312,10 +1312,9 @@ fun getWeekRangeString(inceptionTimestamp: Long, weekIndex: Int): String {
 }
 
 fun isCellToday(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): Boolean {
+    val cellTimeInMillis = inceptionTimestamp + (weekIndex * 7L + (dayOfWeek - 1)) * 24L * 60L * 60L * 1000L
     val cal = Calendar.getInstance()
-    cal.timeInMillis = inceptionTimestamp
-    cal.add(Calendar.WEEK_OF_YEAR, weekIndex)
-    cal.add(Calendar.DAY_OF_YEAR, dayOfWeek - 1)
+    cal.timeInMillis = cellTimeInMillis
     
     val today = Calendar.getInstance()
     return cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
@@ -1325,10 +1324,9 @@ fun isCellToday(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): Boole
 fun getTodayDayIndex(inceptionTimestamp: Long, currentWeekIndex: Int): Int {
     val today = Calendar.getInstance()
     for (d in 1..7) {
+        val cellTimeInMillis = inceptionTimestamp + (currentWeekIndex * 7L + (d - 1)) * 24L * 60L * 60L * 1000L
         val cal = Calendar.getInstance()
-        cal.timeInMillis = inceptionTimestamp
-        cal.add(Calendar.WEEK_OF_YEAR, currentWeekIndex)
-        cal.add(Calendar.DAY_OF_YEAR, d - 1)
+        cal.timeInMillis = cellTimeInMillis
         if (cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
             cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)) {
             return d
