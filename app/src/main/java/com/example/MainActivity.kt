@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -778,11 +780,13 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.Bottom
             ) {
                 Column {
-                    val currentDayAbbr = remember(taskDayOfWeek) {
-                        dayAbbrs.getOrElse(taskDayOfWeek - 1) { "MON" }
+                    val headerText = if (state.selectedWeekIndex == state.currentWeekIndex) {
+                        "WEEK ${state.selectedWeekIndex + 1} : ${getDayAbsoluteDateString(state.meta.inceptionTimestamp, state.selectedWeekIndex, taskDayOfWeek)}"
+                    } else {
+                        "WEEK ${state.selectedWeekIndex + 1} : ${getWeekRangeString(state.meta.inceptionTimestamp, state.selectedWeekIndex)}"
                     }
                     Text(
-                        text = "WEEK ${state.selectedWeekIndex + 1} - $currentDayAbbr : EXECUTION",
+                        text = headerText,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
@@ -976,6 +980,18 @@ fun DashboardScreen(
                             focusedTextColor = MaterialTheme.colorScheme.primary,
                             unfocusedTextColor = MaterialTheme.colorScheme.primary
                         ),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                val title = newTaskTitle.trim()
+                                if (title.isNotEmpty()) {
+                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek)
+                                    newTaskTitle = ""
+                                } else {
+                                    focusManager.clearFocus()
+                                }
+                            }
+                        ),
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
@@ -993,7 +1009,6 @@ fun DashboardScreen(
                                 if (title.isNotEmpty()) {
                                     onAddTask(title, state.selectedWeekIndex, taskDayOfWeek)
                                     newTaskTitle = ""
-                                    focusManager.clearFocus()
                                 }
                             }
                             .testTag("add_task_button"),
@@ -1232,4 +1247,57 @@ fun formatWeekRange(inceptionTimestamp: Long, weekIndex: Int): String {
     val weekEndMillis = weekStartMillis + 6L * 24L * 60L * 60L * 1000L
     val sdf = SimpleDateFormat("MMM d, yyyy", Locale.US)
     return "${sdf.format(Date(weekStartMillis))} — ${sdf.format(Date(weekEndMillis))}"
+}
+
+fun getDayAbsoluteDateString(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): String {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = inceptionTimestamp
+    cal.add(Calendar.WEEK_OF_YEAR, weekIndex)
+    cal.add(Calendar.DAY_OF_YEAR, dayOfWeek - 1)
+    
+    val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+    val monthVal = cal.get(Calendar.MONTH)
+    val year = cal.get(Calendar.YEAR)
+    
+    val weekDays = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+    val dayAbbr = weekDays.getOrElse(dayOfWeek - 1) { "MON" }
+    
+    val months = listOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+    val monthAbbr = months[monthVal]
+    
+    return "$dayAbbr, $dayOfMonth $monthAbbr $year"
+}
+
+fun getWeekRangeString(inceptionTimestamp: Long, weekIndex: Int): String {
+    val startCal = Calendar.getInstance()
+    startCal.timeInMillis = inceptionTimestamp
+    startCal.add(Calendar.WEEK_OF_YEAR, weekIndex)
+    
+    val endCal = Calendar.getInstance()
+    endCal.timeInMillis = startCal.timeInMillis
+    endCal.add(Calendar.DAY_OF_YEAR, 6)
+    
+    val startDay = startCal.get(Calendar.DAY_OF_MONTH)
+    val startMonthVal = startCal.get(Calendar.MONTH)
+    val startYear = startCal.get(Calendar.YEAR)
+    
+    val endDay = endCal.get(Calendar.DAY_OF_MONTH)
+    val endMonthVal = endCal.get(Calendar.MONTH)
+    val endYear = endCal.get(Calendar.YEAR)
+    
+    val months = listOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+    val startMonth = months[startMonthVal]
+    val endMonth = months[endMonthVal]
+    
+    return when {
+        startYear != endYear -> {
+            "$startDay $startMonth $startYear - $endDay $endMonth $endYear"
+        }
+        startMonthVal != endMonthVal -> {
+            "$startDay $startMonth - $endDay $endMonth $startYear"
+        }
+        else -> {
+            "$startDay - $endDay $startMonth $startYear"
+        }
+    }
 }
