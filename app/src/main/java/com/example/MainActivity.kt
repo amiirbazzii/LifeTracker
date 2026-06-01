@@ -366,6 +366,13 @@ fun DashboardScreen(
     val focusManager = LocalFocusManager.current
     var isInputFocused by remember { mutableStateOf(false) }
 
+    val isImeVisible = WindowInsets.isImeVisible
+    LaunchedEffect(isImeVisible) {
+        if (!isImeVisible) {
+            focusManager.clearFocus()
+        }
+    }
+
     BackHandler(enabled = isInputFocused) {
         focusManager.clearFocus()
     }
