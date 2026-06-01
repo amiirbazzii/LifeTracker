@@ -867,6 +867,7 @@ fun DashboardScreen(
                             val task = filteredTasks[index]
                             TaskItemRow(
                                 task = task,
+                                inceptionTimestamp = state.meta.inceptionTimestamp,
                                 isReadOnly = isHistorical,
                                 onToggle = onToggleTask,
                                 onDelete = onDeleteTask
@@ -934,8 +935,10 @@ fun DashboardScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            val currentDayAbbr = remember(taskDayOfWeek) {
-                                dayAbbrs.getOrElse(taskDayOfWeek - 1) { "MON" }
+                            val currentDayAbbr = remember(state.meta.inceptionTimestamp, state.selectedWeekIndex, taskDayOfWeek) {
+                                val cellTimeInMillis = state.meta.inceptionTimestamp + (state.selectedWeekIndex * 7L + (taskDayOfWeek - 1)) * 24L * 60L * 60L * 1000L
+                                val sdf = SimpleDateFormat("EEE", Locale.getDefault())
+                                sdf.format(Date(cellTimeInMillis)).uppercase()
                             }
                             Text(
                                 text = currentDayAbbr,
@@ -1041,6 +1044,7 @@ fun DashboardScreen(
 @Composable
 fun TaskItemRow(
     task: DailyTask,
+    inceptionTimestamp: Long,
     isReadOnly: Boolean,
     onToggle: (DailyTask) -> Unit,
     onDelete: (String) -> Unit
@@ -1102,8 +1106,11 @@ fun TaskItemRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         // Stark minimalist day badge prefix
-        val dayLabels = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
-        val dayLabel = if (task.dayOfWeek in 1..7) dayLabels[task.dayOfWeek - 1] else "MON"
+        val dayLabel = remember(inceptionTimestamp, task.weekIndex, task.dayOfWeek) {
+            val cellTimeInMillis = inceptionTimestamp + (task.weekIndex * 7L + (task.dayOfWeek - 1)) * 24L * 60L * 60L * 1000L
+            val sdf = SimpleDateFormat("EEE", Locale.getDefault())
+            sdf.format(Date(cellTimeInMillis)).uppercase()
+        }
         Text(
             text = dayLabel,
             style = MaterialTheme.typography.labelSmall.copy(
@@ -1267,8 +1274,8 @@ fun getDayAbsoluteDateString(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek
     val monthVal = cal.get(Calendar.MONTH)
     val year = cal.get(Calendar.YEAR)
     
-    val weekDays = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
-    val dayAbbr = weekDays.getOrElse(dayOfWeek - 1) { "MON" }
+    val sdf = SimpleDateFormat("EEE", Locale.getDefault())
+    val dayAbbr = sdf.format(Date(cellTimeInMillis)).uppercase()
     
     val months = listOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
     val monthAbbr = months[monthVal]
