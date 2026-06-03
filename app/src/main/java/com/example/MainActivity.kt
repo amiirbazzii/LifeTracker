@@ -689,8 +689,13 @@ fun DashboardScreen(
                                                         fontSize = 9.sp,
                                                         fontWeight = if (isDaySelected) FontWeight.Black else FontWeight.Bold,
                                                         fontFamily = FontFamily.Monospace,
-                                                        color = if (dayLevel > 0) MonochromeWhite 
-                                                                else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                                        color = if (isToday) {
+                                                            if (dayLevel == 4) MonochromeBlack else GridLevel4
+                                                        } else if (dayLevel > 0) {
+                                                            MonochromeWhite
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                                        }
                                                     )
                                                 )
                                             }
