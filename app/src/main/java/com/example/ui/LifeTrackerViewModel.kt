@@ -12,9 +12,20 @@ import com.example.data.LifeTrackerRepository
 import com.example.data.TimelineMeta
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import android.content.Context
 import java.util.UUID
 
-class LifeTrackerViewModel(private val repository: LifeTrackerRepository) : ViewModel() {
+class LifeTrackerViewModel(private val repository: LifeTrackerRepository, private val application: Application) : ViewModel() {
+
+    private val prefs = application.getSharedPreferences("life_tracker_prefs", Context.MODE_PRIVATE)
+
+    private val _userGoal = MutableStateFlow(prefs.getString("user_goal", "") ?: "")
+    val userGoal = _userGoal.asStateFlow()
+
+    fun saveUserGoal(goal: String) {
+        _userGoal.value = goal
+        prefs.edit().putString("user_goal", goal).apply()
+    }
 
     private val _selectedWeekIndex = MutableStateFlow<Int?>(null)
     val selectedWeekIndex = _selectedWeekIndex.asStateFlow()
@@ -125,6 +136,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository) : View
         viewModelScope.launch {
             repository.resetApp()
             _selectedWeekIndex.value = null
+            saveUserGoal("")
         }
     }
 
@@ -133,7 +145,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository) : View
             initializer {
                 val database = AppDatabase.getDatabase(application)
                 val repository = LifeTrackerRepository(database.timelineDao())
-                LifeTrackerViewModel(repository)
+                LifeTrackerViewModel(repository, application)
             }
         }
     }

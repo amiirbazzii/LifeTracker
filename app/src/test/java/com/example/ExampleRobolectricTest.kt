@@ -47,6 +47,8 @@ class ExampleRobolectricTest {
         MyApplicationTheme {
             DashboardScreen(
                 state = state,
+                userGoal = "TEST GOAL",
+                onEditGoalClick = {},
                 onSelectWeek = {},
                 onAddTask = { _, _, _ -> },
                 onToggleTask = {},

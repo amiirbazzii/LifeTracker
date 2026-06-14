@@ -6,9 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -88,6 +90,8 @@ fun LifeTrackerApp(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val userGoal by viewModel.userGoal.collectAsStateWithLifecycle()
+    var currentScreen by remember { mutableStateOf("dashboard") }
 
     Box(
         modifier = modifier
@@ -111,15 +115,161 @@ fun LifeTrackerApp(
                 )
             }
             is LifeTrackerUiState.Dashboard -> {
-                DashboardScreen(
-                    state = uiState,
-                    onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
-                    onAddTask = { title, weekIndex, day -> viewModel.addTask(title, weekIndex, day) },
-                    onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },
-                    onDeleteTask = { taskId -> viewModel.deleteTask(taskId) },
-                    onReset = { viewModel.resetTimeline() }
+                if (currentScreen == "goal_input") {
+                    GoalInputScreen(
+                        currentGoal = userGoal,
+                        onSave = { newGoal ->
+                            viewModel.saveUserGoal(newGoal)
+                            currentScreen = "dashboard"
+                        },
+                        onBack = { currentScreen = "dashboard" }
+                    )
+                } else {
+                    DashboardScreen(
+                        state = uiState,
+                        userGoal = userGoal,
+                        onEditGoalClick = { currentScreen = "goal_input" },
+                        onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
+                        onAddTask = { title, weekIndex, day -> viewModel.addTask(title, weekIndex, day) },
+                        onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },
+                        onDeleteTask = { taskId -> viewModel.deleteTask(taskId) },
+                        onReset = { viewModel.resetTimeline() }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GoalInputScreen(
+    currentGoal: String,
+    onSave: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var goalText by remember { mutableStateOf(currentGoal) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
+    ) {
+        // Goal page header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "EXECUTION GOAL PROTOCOL",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 2.sp
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // Minimalist exit box matching the reset box style
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(0.dp))
+                    .clickable { onBack() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close Goal Input",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Enter a core objective, mantra, or rule to direct your life matrix grid. This goal will scroll in the top control panel of your dashboard.",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = FontFamily.Monospace
+            ),
+            color = Zinc400
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Custom Outlined TextField designed with brutalist stark lines
+        OutlinedTextField(
+            value = goalText,
+            onValueChange = { goalText = it },
+            placeholder = {
+                Text(
+                    text = "e.g., CONTINUOUS ITERATION // MINIMAL DISTRACTION",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Zinc500,
+                        fontFamily = FontFamily.Monospace
+                    )
+                )
+            },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("goal_input_field"),
+            shape = RoundedCornerShape(0.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GridLevel4,
+                unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            ),
+            singleLine = false,
+            maxLines = 5
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Geometric Brutalist Save Button
+        Button(
+            onClick = { onSave(goalText.trim()) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag("save_goal_button"),
+            shape = RoundedCornerShape(0.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GridLevel4,
+                contentColor = MonochromeBlack
+            )
+        ) {
+            Text(
+                text = "COMMIT TO MATRIX PROFILE",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 1.sp
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Cancel/Back Text Button
+        TextButton(
+            onClick = { onBack() },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "ABORT PROTOCOL (DISCARD)",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    color = Zinc500
+                )
+            )
         }
     }
 }
@@ -341,6 +491,8 @@ fun OnboardingScreen(
 @Composable
 fun DashboardScreen(
     state: LifeTrackerUiState.Dashboard,
+    userGoal: String,
+    onEditGoalClick: () -> Unit,
     onSelectWeek: (Int) -> Unit,
     onAddTask: (String, Int, Int) -> Unit,
     onToggleTask: (DailyTask) -> Unit,
@@ -411,11 +563,16 @@ fun DashboardScreen(
                 .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)), RoundedCornerShape(0.dp))
                 .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp)
+                    .clickable { onEditGoalClick() }
+            ) {
                 Text(
-                    text = "PROTOCOL",
+                    text = "GOAL",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = Zinc500,
                         fontSize = 10.sp,
@@ -425,41 +582,35 @@ fun DashboardScreen(
                     ),
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
+                val goalTextToShow = if (userGoal.isBlank()) {
+                    "> TAP TO SET AN EXECUTION GOAL"
+                } else {
+                    userGoal.uppercase()
+                }
                 Text(
-                    text = "LIFETRACKER.sys",
+                    text = goalTextToShow,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = (-0.5).sp
+                        letterSpacing = (-0.5).sp,
+                        color = if (userGoal.isBlank()) GridLevel4 else MaterialTheme.colorScheme.primary
                     ),
-                    color = MaterialTheme.colorScheme.primary
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .basicMarquee(
+                            iterations = Int.MAX_VALUE,
+                            initialDelayMillis = 1000,
+                            velocity = 20.dp
+                        )
                 )
             }
 
             Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "100% LOCAL-FIRST",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = GridLevel4,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = 0.5.sp
-                        )
-                    )
-                    Text(
-                        text = "v1.0.0-PROD",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Zinc400,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 10.sp
-                        )
-                    )
-                }
-
                 // Clean Reset Box
                 var showResetAlert by remember { mutableStateOf(false) }
                 Box(
