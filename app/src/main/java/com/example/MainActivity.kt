@@ -572,7 +572,7 @@ fun DashboardScreen(
                     .clickable { onEditGoalClick() }
             ) {
                 Text(
-                    text = "GOAL",
+                    text = "YOUR NEXT ${state.meta.targetYears} YEAR GOAL",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = Zinc500,
                         fontSize = 10.sp,
