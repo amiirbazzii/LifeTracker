@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.TimelineMeta
+import com.example.ui.DashboardScreen
 import com.example.ui.LifeTrackerUiState
 import com.example.ui.theme.MyApplicationTheme
 import org.junit.Assert.assertEquals
