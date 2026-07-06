@@ -123,82 +123,84 @@ fun DashboardScreen(
             .padding(DesignTokens.PaddingLarge)
     ) {
         // App Header conforming to Clean Minimalism HTML mockup
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                    RoundedCornerShape(DesignTokens.PaddingZero)
-                )
-                .padding(DesignTokens.PaddingMedium),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = DesignTokens.PaddingLarge)
-                    .clickable { onEditGoalClick() }
-            ) {
-                Text(
-                    text = "YOUR NEXT ${state.meta.targetYears} YEAR GOAL",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Zinc500,
-                        fontSize = DesignTokens.FontSizeSmall,
-                        letterSpacing = DesignTokens.LetterSpacingUltraWide,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    ),
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
-                val goalTextToShow = if (userGoal.isBlank()) {
-                    "> TAP TO SET AN EXECUTION GOAL"
-                } else {
-                    userGoal.uppercase()
-                }
-                Text(
-                    text = goalTextToShow,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = DesignTokens.LetterSpacingCondensed,
-                        color = if (userGoal.isBlank()) GridLevel4 else MaterialTheme.colorScheme.primary
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            initialDelayMillis = 1000,
-                            velocity = 20.dp
-                        )
-                )
-            }
-
+        if (!isInputFocused) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
-            ) {
-                // More Action Box to go to the goal input / config page
-                Box(
-                    modifier = Modifier
-                        .size(DesignTokens.ControlBoxSize)
-                        .border(
-                            DesignTokens.StrokeMedium,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            RoundedCornerShape(DesignTokens.PaddingZero)
-                        )
-                        .clickable { onEditGoalClick() }
-                        .testTag("more_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More Options",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        RoundedCornerShape(DesignTokens.PaddingZero)
                     )
+                    .padding(DesignTokens.PaddingMedium),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = DesignTokens.PaddingLarge)
+                        .clickable { onEditGoalClick() }
+                ) {
+                    Text(
+                        text = "YOUR NEXT ${state.meta.targetYears} YEAR GOAL",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Zinc500,
+                            fontSize = DesignTokens.FontSizeSmall,
+                            letterSpacing = DesignTokens.LetterSpacingUltraWide,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    val goalTextToShow = if (userGoal.isBlank()) {
+                        "> TAP TO SET AN EXECUTION GOAL"
+                    } else {
+                        userGoal.uppercase()
+                    }
+                    Text(
+                        text = goalTextToShow,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = DesignTokens.LetterSpacingCondensed,
+                            color = if (userGoal.isBlank()) GridLevel4 else MaterialTheme.colorScheme.primary
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                initialDelayMillis = 1000,
+                                velocity = 20.dp
+                            )
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
+                ) {
+                    // More Action Box to go to the goal input / config page
+                    Box(
+                        modifier = Modifier
+                            .size(DesignTokens.ControlBoxSize)
+                            .border(
+                                DesignTokens.StrokeMedium,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                RoundedCornerShape(DesignTokens.PaddingZero)
+                            )
+                            .clickable { onEditGoalClick() }
+                            .testTag("more_button"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More Options",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -478,7 +480,7 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .padding(bottom = DesignTokens.PaddingSmall),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                verticalAlignment = if (isInputFocused) Alignment.CenterVertically else Alignment.Bottom
             ) {
                 Column {
                     val headerText = if (state.selectedWeekIndex == state.currentWeekIndex) {
@@ -495,47 +497,76 @@ fun DashboardScreen(
                         ),
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = "$completedCount OF $totalCount TASKS COMPLETED",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = DesignTokens.FontSizeSmall,
-                            color = Zinc500
+                    if (!isInputFocused) {
+                        Text(
+                            text = "$completedCount OF $totalCount TASKS COMPLETED",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = DesignTokens.FontSizeSmall,
+                                color = Zinc500
+                            )
                         )
-                    )
+                    }
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "SR: $completionRate%",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = GridLevel4,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = -1.sp
+                if (isInputFocused) {
+                    Box(
+                        modifier = Modifier
+                            .size(DesignTokens.ControlBoxSize)
+                            .border(
+                                DesignTokens.StrokeMedium,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                RoundedCornerShape(DesignTokens.PaddingZero)
+                            )
+                            .clickable {
+                                focusManager.clearFocus()
+                                selectedCategory = null
+                                selectedRoutine = null
+                                newTaskTitle = ""
+                            }
+                            .testTag("close_input_focus_button"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Input",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
                         )
-                    )
-                    val level = when {
-                        totalCount == 0 -> 0
-                        else -> {
-                            val sr = (completedCount.toFloat() / totalCount.toFloat()) * 100f
-                            when {
-                                sr == 0f -> 0
-                                sr < 33f -> 1
-                                sr < 66f -> 2
-                                sr < 100f -> 3
-                                else -> 4
+                    }
+                } else {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "SR: $completionRate%",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = GridLevel4,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = -1.sp
+                            )
+                        )
+                        val level = when {
+                            totalCount == 0 -> 0
+                            else -> {
+                                val sr = (completedCount.toFloat() / totalCount.toFloat()) * 100f
+                                when {
+                                    sr == 0f -> 0
+                                    sr < 33f -> 1
+                                    sr < 66f -> 2
+                                    sr < 100f -> 3
+                                    else -> 4
+                                }
                             }
                         }
-                    }
-                    Text(
-                        text = "LEVEL $level",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Zinc500,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold
+                        Text(
+                            text = "LEVEL $level",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Zinc500,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
-                    )
+                    }
                 }
             }
 

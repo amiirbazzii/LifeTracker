@@ -162,7 +162,6 @@ fun TaskItemRow(
                 border = BorderStroke(
                     DesignTokens.StrokeMedium,
                     if (isCompleted) Color.Transparent
-                    else if (hasRoutine) GridLevel4
                     else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 ),
                 shape = RoundedCornerShape(DesignTokens.PaddingZero)
@@ -173,17 +172,6 @@ fun TaskItemRow(
             .testTag("task_row_${task.taskId}"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Geometric neon accent bar on the left for linked tasks
-        if (hasRoutine) {
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .fillMaxHeight()
-                    .background(if (isCompleted) MonochromeBlack else GridLevel4)
-                    .testTag("linked_task_accent_${task.taskId}")
-            )
-        }
-
         Row(
             modifier = Modifier
                 .weight(1f)
