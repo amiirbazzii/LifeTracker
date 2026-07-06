@@ -1,5 +1,6 @@
 package com.example.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +24,8 @@ import com.example.ui.theme.*
 fun GoalInputScreen(
     currentGoal: String,
     onSave: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onReset: () -> Unit
 ) {
     var goalText by remember { mutableStateOf(currentGoal) }
 
@@ -151,6 +153,79 @@ fun GoalInputScreen(
                     fontFamily = FontFamily.Monospace,
                     color = Zinc500
                 )
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        var showResetAlert by remember { mutableStateOf(false) }
+
+        Button(
+            onClick = { showResetAlert = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DesignTokens.ButtonHeight)
+                .testTag("reset_button_goal_screen"),
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color.Red
+            ),
+            border = BorderStroke(DesignTokens.StrokeMedium, Color.Red.copy(alpha = 0.5f))
+        ) {
+            Text(
+                text = "RESET ALL PROTOCOLS",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                )
+            )
+        }
+
+        if (showResetAlert) {
+            AlertDialog(
+                onDismissRequest = { showResetAlert = false },
+                shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                title = {
+                    Text(
+                        text = DesignTokens.RESET_DIALOG_TITLE,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    )
+                },
+                text = {
+                    Text(
+                        text = DesignTokens.RESET_DIALOG_TEXT,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showResetAlert = false
+                            onReset()
+                        }
+                    ) {
+                        Text(
+                            DesignTokens.RESET_CONFIRM,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetAlert = false }) {
+                        Text(
+                            DesignTokens.RESET_CANCEL,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
             )
         }
     }

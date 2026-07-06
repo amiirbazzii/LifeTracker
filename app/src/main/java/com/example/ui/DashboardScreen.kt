@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -171,8 +172,7 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
             ) {
-                // Clean Reset Box
-                var showResetAlert by remember { mutableStateOf(false) }
+                // More Action Box to go to the goal input / config page
                 Box(
                     modifier = Modifier
                         .size(DesignTokens.ControlBoxSize)
@@ -181,61 +181,15 @@ fun DashboardScreen(
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                             RoundedCornerShape(DesignTokens.PaddingZero)
                         )
-                        .clickable { showResetAlert = true }
-                        .testTag("reset_button"),
+                        .clickable { onEditGoalClick() }
+                        .testTag("more_button"),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reset Timeline",
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More Options",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
-                    )
-                }
-
-                if (showResetAlert) {
-                    AlertDialog(
-                        onDismissRequest = { showResetAlert = false },
-                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                        title = {
-                            Text(
-                                text = DesignTokens.RESET_DIALOG_TITLE,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = DesignTokens.RESET_DIALOG_TEXT,
-                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showResetAlert = false
-                                    onReset()
-                                }
-                            ) {
-                                Text(
-                                    DesignTokens.RESET_CONFIRM,
-                                    color = Color.Red,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showResetAlert = false }) {
-                                Text(
-                                    DesignTokens.RESET_CANCEL,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                        }
                     )
                 }
             }

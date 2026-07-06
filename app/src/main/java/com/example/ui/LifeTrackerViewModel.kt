@@ -89,7 +89,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         initialValue = LifeTrackerUiState.Loading
     )
 
-    fun initializeTimeline(years: Int) {
+    fun initializeTimeline(years: Int, goal: String) {
         viewModelScope.launch {
             val totalWeeks = years * 52
             val meta = TimelineMeta(
@@ -98,6 +98,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
                 inceptionTimestamp = System.currentTimeMillis()
             )
             repository.saveTimeline(meta)
+            saveUserGoal(goal)
         }
     }
 

@@ -75,8 +75,8 @@ fun LifeTrackerApp(
             }
             is LifeTrackerUiState.Onboarding -> {
                 OnboardingScreen(
-                    onInitialize = { years ->
-                        viewModel.initializeTimeline(years)
+                    onInitialize = { years, goal ->
+                        viewModel.initializeTimeline(years, goal)
                     }
                 )
             }
@@ -88,7 +88,11 @@ fun LifeTrackerApp(
                             viewModel.saveUserGoal(newGoal)
                             currentScreen = "dashboard"
                         },
-                        onBack = { currentScreen = "dashboard" }
+                        onBack = { currentScreen = "dashboard" },
+                        onReset = {
+                            viewModel.resetTimeline()
+                            currentScreen = "dashboard"
+                        }
                     )
                 } else {
                     DashboardScreen(

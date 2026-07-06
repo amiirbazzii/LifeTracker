@@ -23,9 +23,10 @@ import com.example.ui.theme.*
 
 @Composable
 fun OnboardingScreen(
-    onInitialize: (Int) -> Unit
+    onInitialize: (Int, String) -> Unit
 ) {
     var yearsText by remember { mutableStateOf("5") }
+    var goalText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -196,6 +197,49 @@ fun OnboardingScreen(
                     color = Zinc500
                 )
 
+                Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
+
+                Text(
+                    text = "THE MATRIX EXECUTION GOAL",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = DesignTokens.LetterSpacingWide,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Zinc500
+                )
+
+                Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+                OutlinedTextField(
+                    value = goalText,
+                    onValueChange = { goalText = it },
+                    placeholder = {
+                        Text(
+                            text = DesignTokens.GOAL_FIELD_PLACEHOLDER,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Zinc500,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("onboarding_goal_input"),
+                    shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GridLevel4,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    ),
+                    singleLine = true
+                )
+
                 errorMessage?.let { msg ->
                     Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
                     Text(
@@ -216,7 +260,7 @@ fun OnboardingScreen(
                         if (years == null || years <= 0) {
                             errorMessage = DesignTokens.ONBOARDING_ERROR_POSITIVE
                         } else {
-                            onInitialize(years)
+                            onInitialize(years, goalText.trim())
                         }
                     },
                     shape = RoundedCornerShape(DesignTokens.PaddingZero),

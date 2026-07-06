@@ -22,7 +22,7 @@ class GreetingScreenshotTest {
 
   @Test
   fun greeting_screenshot() {
-    composeTestRule.setContent { MyApplicationTheme { OnboardingScreen(onInitialize = {}) } }
+    composeTestRule.setContent { MyApplicationTheme { OnboardingScreen(onInitialize = { _, _ -> }) } }
 
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
   }
