@@ -817,15 +817,20 @@ fun RewardCard(
     canClaim: Boolean,
     onClaimClick: () -> Unit
 ) {
+    val isAchieved = reward.claimedCount > 0
+    val borderColor = if (isAchieved) GridLevel4 else if (canClaim) GridLevel4.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val cardBg = if (isAchieved) GridLevel4.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+    val borderStroke = if (isAchieved) DesignTokens.StrokeThick else DesignTokens.StrokeMedium
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                DesignTokens.StrokeMedium,
-                if (canClaim) GridLevel4.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                borderStroke,
+                borderColor,
                 RoundedCornerShape(DesignTokens.PaddingZero)
             )
-            .background(MaterialTheme.colorScheme.surface)
+            .background(cardBg)
             .padding(DesignTokens.PaddingMedium)
     ) {
         Row(
@@ -839,7 +844,7 @@ fun RewardCard(
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (isAchieved) GridLevel4 else MaterialTheme.colorScheme.primary
                     )
                 )
                 Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
@@ -847,7 +852,7 @@ fun RewardCard(
                     text = "COST: ${reward.pointCost} PTS // CLAIMED: ${reward.claimedCount} TIMES",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
-                        color = Zinc500
+                        color = if (isAchieved) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) else Zinc500
                     )
                 )
             }
@@ -856,7 +861,7 @@ fun RewardCard(
 
             Button(
                 onClick = onClaimClick,
-                enabled = canClaim,
+                enabled = !isAchieved && canClaim,
                 shape = RoundedCornerShape(DesignTokens.PaddingZero),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (canClaim) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
@@ -866,13 +871,13 @@ fun RewardCard(
                 ),
                 border = BorderStroke(
                     DesignTokens.StrokeMedium,
-                    if (canClaim) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    if (!isAchieved && canClaim) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 ),
                 contentPadding = PaddingValues(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingTiny),
                 modifier = Modifier.testTag("claim_reward_button_${reward.id}")
             ) {
                 Text(
-                    text = "CLAIM",
+                    text = if (isAchieved) "ACHIEVED" else "CLAIM",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
