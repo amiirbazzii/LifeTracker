@@ -23,5 +23,8 @@ data class DailyTask(
     val isCompleted: Int = 0, // 0 = False, 1 = True
     
     @ColumnInfo(name = "created_timestamp")
-    val createdTimestamp: Long
+    val createdTimestamp: Long,
+
+    @ColumnInfo(name = "routine_id")
+    val routineId: String? = null
 )

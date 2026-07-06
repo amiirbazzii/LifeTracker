@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.DashboardScreen
 import com.example.ui.GoalInputScreen
+import com.example.ui.GoalHubScreen
 import com.example.ui.LifeTrackerUiState
 import com.example.ui.LifeTrackerViewModel
 import com.example.ui.OnboardingScreen
@@ -81,30 +82,57 @@ fun LifeTrackerApp(
                 )
             }
             is LifeTrackerUiState.Dashboard -> {
-                if (currentScreen == "goal_input") {
-                    GoalInputScreen(
-                        currentGoal = userGoal,
-                        onSave = { newGoal ->
-                            viewModel.saveUserGoal(newGoal)
-                            currentScreen = "dashboard"
-                        },
-                        onBack = { currentScreen = "dashboard" },
-                        onReset = {
-                            viewModel.resetTimeline()
-                            currentScreen = "dashboard"
-                        }
-                    )
-                } else {
-                    DashboardScreen(
-                        state = uiState,
-                        userGoal = userGoal,
-                        onEditGoalClick = { currentScreen = "goal_input" },
-                        onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
-                        onAddTask = { title, weekIndex, day -> viewModel.addTask(title, weekIndex, day) },
-                        onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },
-                        onDeleteTask = { taskId -> viewModel.deleteTask(taskId) },
-                        onReset = { viewModel.resetTimeline() }
-                    )
+                val categories by viewModel.allCategories.collectAsState()
+                val routines by viewModel.allRoutines.collectAsState()
+
+                when (currentScreen) {
+                    "goal_input" -> {
+                        GoalInputScreen(
+                            currentGoal = userGoal,
+                            onSave = { newGoal ->
+                                viewModel.saveUserGoal(newGoal)
+                                currentScreen = "goal_hub"
+                            },
+                            onBack = { currentScreen = "goal_hub" },
+                            onReset = {
+                                viewModel.resetTimeline()
+                                currentScreen = "dashboard"
+                            }
+                        )
+                    }
+                    "goal_hub" -> {
+                        val userPoints by viewModel.userPoints.collectAsState()
+                        val rewards by viewModel.allRewards.collectAsState()
+
+                        GoalHubScreen(
+                            grandGoal = userGoal,
+                            userPoints = userPoints,
+                            categories = categories,
+                            routines = routines,
+                            rewards = rewards,
+                            onCreateCategory = { name -> viewModel.onCreateCategory(name) },
+                            onCreateRoutine = { catId, title, target -> viewModel.onCreateRoutine(catId, title, target) },
+                            onAddReward = { name, cost -> viewModel.onAddReward(name, cost) },
+                            onClaimReward = { reward -> viewModel.onClaimReward(reward) },
+                            onEditGrandGoal = { currentScreen = "goal_input" },
+                            onBack = { currentScreen = "dashboard" }
+                        )
+                    }
+                    else -> {
+                        DashboardScreen(
+                            state = uiState,
+                            userGoal = userGoal,
+                            categories = categories,
+                            routines = routines,
+                            onEditGoalClick = { currentScreen = "goal_hub" },
+                            onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
+                            onAddTask = { title, weekIndex, day, routineId -> viewModel.addTask(title, weekIndex, day, routineId) },
+                            onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },
+                            onDeleteTask = { taskId -> viewModel.deleteTask(taskId) },
+                            onReset = { viewModel.resetTimeline() },
+                            onIncrementRoutineCompletion = { routineId -> viewModel.incrementRoutineCompletion(routineId) }
+                        )
+                    }
                 }
             }
         }

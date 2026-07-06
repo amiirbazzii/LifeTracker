@@ -49,15 +49,17 @@ class ExampleRobolectricTest {
             DashboardScreen(
                 state = state,
                 userGoal = "TEST GOAL",
+                categories = emptyList(),
+                routines = emptyList(),
                 onEditGoalClick = {},
                 onSelectWeek = {},
-                onAddTask = { _, _, _ -> },
+                onAddTask = { _, _, _, _ -> },
                 onToggleTask = {},
                 onDeleteTask = {},
-                onReset = {}
+                onReset = {},
+                onIncrementRoutineCompletion = {}
             )
         }
     }
   }
 }
-

@@ -31,4 +31,52 @@ interface TimelineDao {
 
     @Query("DELETE FROM daily_tasks")
     suspend fun clearAllTasks()
+
+    // --- Category Operations ---
+    @Query("SELECT * FROM categories ORDER BY created_timestamp ASC")
+    fun getAllCategories(): Flow<List<Category>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCategory(category: Category)
+
+    @Query("DELETE FROM categories WHERE category_id = :categoryId")
+    suspend fun deleteCategory(categoryId: String)
+
+    @Query("DELETE FROM categories")
+    suspend fun clearAllCategories()
+
+    // --- Routine Operations ---
+    @Query("SELECT * FROM routines ORDER BY created_timestamp ASC")
+    fun getAllRoutines(): Flow<List<Routine>>
+
+    @Query("SELECT * FROM routines WHERE category_id = :categoryId ORDER BY created_timestamp ASC")
+    fun getRoutinesForCategory(categoryId: String): Flow<List<Routine>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRoutine(routine: Routine)
+
+    @Update
+    suspend fun updateRoutine(routine: Routine)
+
+    @Query("DELETE FROM routines WHERE routine_id = :routineId")
+    suspend fun deleteRoutine(routineId: String)
+
+    @Query("DELETE FROM routines")
+    suspend fun clearAllRoutines()
+
+    // --- Reward Operations ---
+    @Query("SELECT * FROM rewards ORDER BY created_timestamp ASC")
+    fun getAllRewards(): Flow<List<Reward>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertReward(reward: Reward)
+
+    @Update
+    suspend fun updateReward(reward: Reward)
+
+    @Query("DELETE FROM rewards WHERE reward_id = :rewardId")
+    suspend fun deleteReward(rewardId: String)
+
+    @Query("DELETE FROM rewards")
+    suspend fun clearAllRewards()
 }

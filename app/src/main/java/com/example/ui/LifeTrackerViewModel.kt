@@ -10,6 +10,9 @@ import com.example.data.AppDatabase
 import com.example.data.DailyTask
 import com.example.data.LifeTrackerRepository
 import com.example.data.TimelineMeta
+import com.example.data.Category
+import com.example.data.Routine
+import com.example.data.Reward
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import android.content.Context
@@ -22,9 +25,106 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     private val _userGoal = MutableStateFlow(prefs.getString("user_goal", "") ?: "")
     val userGoal = _userGoal.asStateFlow()
 
+    private val _userPoints = MutableStateFlow(prefs.getInt("user_points", 0))
+    val userPoints = _userPoints.asStateFlow()
+
+    val allCategories: StateFlow<List<Category>> = repository.allCategories.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val allRoutines: StateFlow<List<Routine>> = repository.allRoutines.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val allRewards: StateFlow<List<Reward>> = repository.allRewards.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     fun saveUserGoal(goal: String) {
         _userGoal.value = goal
         prefs.edit().putString("user_goal", goal).apply()
+    }
+
+    fun addPoints(points: Int) {
+        val newPoints = _userPoints.value + points
+        _userPoints.value = newPoints
+        prefs.edit().putInt("user_points", newPoints).apply()
+    }
+
+    fun deductPoints(points: Int): Boolean {
+        val current = _userPoints.value
+        if (current >= points) {
+            val newPoints = current - points
+            _userPoints.value = newPoints
+            prefs.edit().putInt("user_points", newPoints).apply()
+            return true
+        }
+        return false
+    }
+
+    fun onCreateCategory(name: String) {
+        viewModelScope.launch {
+            val category = Category(
+                id = UUID.randomUUID().toString(),
+                name = name,
+                createdTimestamp = System.currentTimeMillis()
+            )
+            repository.insertCategory(category)
+        }
+    }
+
+    fun onCreateRoutine(catId: String, title: String, target: Int) {
+        viewModelScope.launch {
+            val routine = Routine(
+                id = UUID.randomUUID().toString(),
+                categoryId = catId,
+                title = title,
+                targetCount = target,
+                completedCount = 0,
+                createdTimestamp = System.currentTimeMillis()
+            )
+            repository.insertRoutine(routine)
+        }
+    }
+
+    fun onAddReward(name: String, cost: Int) {
+        viewModelScope.launch {
+            val reward = Reward(
+                id = UUID.randomUUID().toString(),
+                name = name,
+                pointCost = cost,
+                claimedCount = 0,
+                createdTimestamp = System.currentTimeMillis()
+            )
+            repository.insertReward(reward)
+        }
+    }
+
+    fun onClaimReward(reward: Reward) {
+        viewModelScope.launch {
+            if (deductPoints(reward.pointCost)) {
+                val updated = reward.copy(claimedCount = reward.claimedCount + 1)
+                repository.updateReward(updated)
+            }
+        }
+    }
+
+    fun incrementRoutineCompletion(routineId: String) {
+        viewModelScope.launch {
+            val routines = repository.allRoutines.first()
+            val routine = routines.find { it.id == routineId }
+            if (routine != null) {
+                val updated = routine.copy(completedCount = routine.completedCount + 1)
+                repository.updateRoutine(updated)
+                addPoints(100) // Achieving a milestone = +100 Points
+            }
+        }
     }
 
     private val _selectedWeekIndex = MutableStateFlow<Int?>(null)
@@ -106,7 +206,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         _selectedWeekIndex.value = index
     }
 
-    fun addTask(title: String, weekIndex: Int, dayOfWeek: Int) {
+    fun addTask(title: String, weekIndex: Int, dayOfWeek: Int, routineId: String? = null) {
         viewModelScope.launch {
             val task = DailyTask(
                 taskId = UUID.randomUUID().toString(),
@@ -114,7 +214,8 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
                 dayOfWeek = dayOfWeek,
                 taskTitle = title,
                 isCompleted = 0,
-                createdTimestamp = System.currentTimeMillis()
+                createdTimestamp = System.currentTimeMillis(),
+                routineId = routineId
             )
             repository.insertTask(task)
         }
@@ -122,8 +223,20 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
 
     fun toggleTaskCompletion(task: DailyTask) {
         viewModelScope.launch {
-            val updated = task.copy(isCompleted = if (task.isCompleted == 1) 0 else 1)
+            val willBeCompleted = task.isCompleted == 0
+            val updated = task.copy(isCompleted = if (willBeCompleted) 1 else 0)
             repository.updateTask(updated)
+            
+            val pointsDiff = if (task.routineId != null) 15 else 10
+            if (willBeCompleted) {
+                addPoints(pointsDiff)
+            } else {
+                // Deduct but don't go below 0
+                val current = _userPoints.value
+                val newPoints = (current - pointsDiff).coerceAtLeast(0)
+                _userPoints.value = newPoints
+                prefs.edit().putInt("user_points", newPoints).apply()
+            }
         }
     }
 
@@ -138,6 +251,8 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
             repository.resetApp()
             _selectedWeekIndex.value = null
             saveUserGoal("")
+            _userPoints.value = 0
+            prefs.edit().putInt("user_points", 0).apply()
         }
     }
 

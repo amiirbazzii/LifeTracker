@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.DailyTask
+import com.example.data.Category
+import com.example.data.Routine
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -50,12 +52,15 @@ import java.util.*
 fun DashboardScreen(
     state: LifeTrackerUiState.Dashboard,
     userGoal: String,
+    categories: List<Category> = emptyList(),
+    routines: List<Routine> = emptyList(),
     onEditGoalClick: () -> Unit,
     onSelectWeek: (Int) -> Unit,
-    onAddTask: (String, Int, Int) -> Unit,
+    onAddTask: (String, Int, Int, String?) -> Unit,
     onToggleTask: (DailyTask) -> Unit,
     onDeleteTask: (String) -> Unit,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    onIncrementRoutineCompletion: (String) -> Unit = {}
 ) {
     val currentDayOfWeekIndex = remember(state.meta.inceptionTimestamp, state.currentWeekIndex) {
         Utils.getTodayDayIndex(state.meta.inceptionTimestamp, state.currentWeekIndex)
@@ -63,6 +68,9 @@ fun DashboardScreen(
     
     var newTaskTitle by remember { mutableStateOf("") }
     var taskDayOfWeek by remember { mutableStateOf(currentDayOfWeekIndex) }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var selectedRoutine by remember { mutableStateOf<Routine?>(null) }
+    var activeRoutineIdForMilestoneVerification by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state.selectedWeekIndex) {
         if (state.selectedWeekIndex != state.currentWeekIndex) {
@@ -553,8 +561,18 @@ fun DashboardScreen(
                                 task = task,
                                 inceptionTimestamp = state.meta.inceptionTimestamp,
                                 isReadOnly = isHistorical,
-                                onToggle = onToggleTask,
-                                onDelete = onDeleteTask
+                                onToggle = { t ->
+                                    val isCompletedNow = t.isCompleted == 1
+                                    if (!isCompletedNow && t.routineId != null) {
+                                        onToggleTask(t)
+                                        activeRoutineIdForMilestoneVerification = t.routineId
+                                    } else {
+                                        onToggleTask(t)
+                                    }
+                                },
+                                onDelete = onDeleteTask,
+                                categories = categories,
+                                routines = routines
                             )
                         }
                     }
@@ -598,6 +616,140 @@ fun DashboardScreen(
                     }
                 }
             } else {
+                // Smart Task Category & Routine selection chips
+                if (isInputFocused || selectedCategory != null || newTaskTitle.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = DesignTokens.PaddingSmall)
+                    ) {
+                        // Category Chips Row
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("category_chip_row"),
+                            horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (selectedCategory != null) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+                                            .border(
+                                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.error),
+                                                RoundedCornerShape(DesignTokens.PaddingZero)
+                                            )
+                                            .clickable {
+                                                selectedCategory = null
+                                                selectedRoutine = null
+                                            }
+                                            .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                                            .testTag("clear_category_chip"),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "CLEAR SELECTION",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.error,
+                                                fontSize = DesignTokens.FontSizeSmall
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            items(categories) { category ->
+                                val isSel = selectedCategory?.id == category.id
+                                val chipBg = if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent
+                                val chipText = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                                val chipBorder = if (isSel) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+
+                                Box(
+                                    modifier = Modifier
+                                        .background(chipBg)
+                                        .border(BorderStroke(DesignTokens.StrokeMedium, if (isSel) MaterialTheme.colorScheme.primary else chipBorder), RoundedCornerShape(DesignTokens.PaddingZero))
+                                        .clickable {
+                                            if (isSel) {
+                                                selectedCategory = null
+                                                selectedRoutine = null
+                                            } else {
+                                                selectedCategory = category
+                                                selectedRoutine = null
+                                            }
+                                        }
+                                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                                        .testTag("category_chip_${category.name}"),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = category.name.uppercase(),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            color = chipText,
+                                            fontSize = DesignTokens.FontSizeSmall
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        if (selectedCategory != null) {
+                            val associatedRoutines = routines.filter { it.categoryId == selectedCategory!!.id }
+                            if (associatedRoutines.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                                LazyRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("routine_chip_row"),
+                                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    items(associatedRoutines) { routine ->
+                                        val isSel = selectedRoutine?.id == routine.id
+                                        val chipBg = if (isSel) GridLevel4 else Color.Transparent
+                                        val chipText = if (isSel) MonochromeBlack else MaterialTheme.colorScheme.primary
+                                        val chipBorder = if (isSel) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+
+                                        Box(
+                                            modifier = Modifier
+                                                .background(chipBg)
+                                                .border(BorderStroke(DesignTokens.StrokeMedium, chipBorder), RoundedCornerShape(DesignTokens.PaddingZero))
+                                                .clickable {
+                                                    if (isSel) {
+                                                        selectedRoutine = null
+                                                    } else {
+                                                        selectedRoutine = routine
+                                                        if (newTaskTitle.isBlank()) {
+                                                            newTaskTitle = routine.title
+                                                        }
+                                                    }
+                                                }
+                                                .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                                                .testTag("routine_chip_${routine.title}"),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = routine.title.uppercase(),
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = chipText,
+                                                    fontSize = DesignTokens.FontSizeSmall
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                    }
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -687,8 +839,10 @@ fun DashboardScreen(
                             onDone = {
                                 val title = newTaskTitle.trim()
                                 if (title.isNotEmpty()) {
-                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek)
+                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek, selectedRoutine?.id)
                                     newTaskTitle = ""
+                                    selectedCategory = null
+                                    selectedRoutine = null
                                 } else {
                                     focusManager.clearFocus()
                                 }
@@ -709,8 +863,10 @@ fun DashboardScreen(
                             .clickable {
                                 val title = newTaskTitle.trim()
                                 if (title.isNotEmpty()) {
-                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek)
+                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek, selectedRoutine?.id)
                                     newTaskTitle = ""
+                                    selectedCategory = null
+                                    selectedRoutine = null
                                 }
                             }
                             .testTag("add_task_button"),
@@ -728,5 +884,77 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+
+    if (activeRoutineIdForMilestoneVerification != null) {
+        AlertDialog(
+            onDismissRequest = { activeRoutineIdForMilestoneVerification = null },
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            title = {
+                Text(
+                    text = "[SYSTEM VERIFICATION]",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = DesignTokens.LetterSpacingWide
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            text = {
+                Text(
+                    text = "Great job on today's effort! Did this work result in fully achieving the macro milestone (e.g., Article Published), or is it still a work in progress?",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        lineHeight = 20.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .background(GridLevel4)
+                        .border(DesignTokens.StrokeMedium, MonochromeBlack, RoundedCornerShape(DesignTokens.PaddingZero))
+                        .clickable {
+                            activeRoutineIdForMilestoneVerification?.let { routineId ->
+                                onIncrementRoutineCompletion(routineId)
+                            }
+                            activeRoutineIdForMilestoneVerification = null
+                        }
+                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                        .testTag("milestone_achieved_button")
+                ) {
+                    Text(
+                        text = "MILESTONE ACHIEVED!",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Black,
+                            color = MonochromeBlack
+                        )
+                    )
+                }
+            },
+            dismissButton = {
+                Box(
+                    modifier = Modifier
+                        .border(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary, RoundedCornerShape(DesignTokens.PaddingZero))
+                        .clickable {
+                            activeRoutineIdForMilestoneVerification = null
+                        }
+                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                        .testTag("still_in_progress_button")
+                ) {
+                    Text(
+                        text = "STILL IN PROGRESS",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+        )
     }
 }
