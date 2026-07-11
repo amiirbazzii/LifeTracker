@@ -559,7 +559,7 @@ fun ContextualChipsComponent(
                 }
             }
 
-            items(categories) { category ->
+            items(categories, key = { it.id }) { category ->
                 val isSel = selectedCategory?.id == category.id
                 val chipBg = if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent
                 val chipText = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
@@ -609,7 +609,7 @@ fun ContextualChipsComponent(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(associatedRoutines) { routine ->
+                    items(associatedRoutines, key = { it.id }) { routine ->
                         val isSel = selectedRoutine?.id == routine.id
                         val chipBg = if (isSel) GridLevel4 else Color.Transparent
                         val chipText = if (isSel) MonochromeBlack else MaterialTheme.colorScheme.primary
@@ -673,10 +673,9 @@ fun TaskListSectionComponent(
                 verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
             ) {
                 items(
-                    count = filteredTasks.size,
-                    key = { index -> filteredTasks[index].taskId }
-                ) { index ->
-                    val task = filteredTasks[index]
+                    items = filteredTasks,
+                    key = { it.taskId }
+                ) { task ->
                     TaskItemRowComponent(
                         task = task,
                         inceptionTimestamp = inceptionTimestamp,
@@ -865,6 +864,7 @@ fun MacroTimelineMatrix(
             ) {
                 items(
                     count = state.meta.totalWeeks,
+                    key = { index -> index },
                     span = { index ->
                         if (index == state.currentWeekIndex) {
                             GridItemSpan(7)

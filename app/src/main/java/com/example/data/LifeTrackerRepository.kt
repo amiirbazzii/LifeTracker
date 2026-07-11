@@ -51,8 +51,16 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
         timelineDao.insertCategory(category)
     }
 
+    suspend fun updateCategory(category: Category) {
+        timelineDao.updateCategory(category)
+    }
+
     suspend fun deleteCategory(categoryId: String) {
         timelineDao.deleteCategory(categoryId)
+    }
+
+    suspend fun deleteRoutinesForCategory(categoryId: String) {
+        timelineDao.deleteRoutinesForCategory(categoryId)
     }
 
     suspend fun clearAllCategories() {

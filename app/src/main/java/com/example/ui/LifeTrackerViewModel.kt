@@ -15,6 +15,8 @@ import com.example.data.Routine
 import com.example.data.Reward
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.content.Context
 import java.util.UUID
 
@@ -47,14 +49,18 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     )
 
     fun saveUserGoal(goal: String) {
-        _userGoal.value = goal
-        prefs.edit().putString("user_goal", goal).apply()
+        viewModelScope.launch(Dispatchers.IO) {
+            _userGoal.value = goal
+            prefs.edit().putString("user_goal", goal).apply()
+        }
     }
 
     fun addPoints(points: Int) {
-        val newPoints = _userPoints.value + points
-        _userPoints.value = newPoints
-        prefs.edit().putInt("user_points", newPoints).apply()
+        viewModelScope.launch(Dispatchers.IO) {
+            val newPoints = _userPoints.value + points
+            _userPoints.value = newPoints
+            prefs.edit().putInt("user_points", newPoints).apply()
+        }
     }
 
     fun deductPoints(points: Int): Boolean {
@@ -69,7 +75,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onCreateCategory(name: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val category = Category(
                 id = UUID.randomUUID().toString(),
                 name = name,
@@ -79,8 +85,26 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         }
     }
 
+    fun onUpdateCategory(categoryId: String, newName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val categories = repository.allCategories.first()
+            val category = categories.find { it.id == categoryId }
+            if (category != null) {
+                val updated = category.copy(name = newName)
+                repository.updateCategory(updated)
+            }
+        }
+    }
+
+    fun onDeleteCategory(categoryId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteCategory(categoryId)
+            repository.deleteRoutinesForCategory(categoryId)
+        }
+    }
+
     fun onCreateRoutine(catId: String, title: String, target: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val routine = Routine(
                 id = UUID.randomUUID().toString(),
                 categoryId = catId,
@@ -93,8 +117,25 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         }
     }
 
+    fun onUpdateRoutine(routineId: String, newTitle: String, newTarget: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val routines = repository.allRoutines.first()
+            val routine = routines.find { it.id == routineId }
+            if (routine != null) {
+                val updated = routine.copy(title = newTitle, targetCount = newTarget)
+                repository.updateRoutine(updated)
+            }
+        }
+    }
+
+    fun onDeleteRoutine(routineId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteRoutine(routineId)
+        }
+    }
+
     fun onAddReward(name: String, cost: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val reward = Reward(
                 id = UUID.randomUUID().toString(),
                 name = name,
@@ -107,7 +148,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onClaimReward(reward: Reward) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (deductPoints(reward.pointCost)) {
                 val updated = reward.copy(claimedCount = reward.claimedCount + 1)
                 repository.updateReward(updated)
@@ -116,7 +157,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun incrementRoutineCompletion(routineId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val routines = repository.allRoutines.first()
             val routine = routines.find { it.id == routineId }
             if (routine != null) {
@@ -135,53 +176,55 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         repository.allTasks,
         _selectedWeekIndex
     ) { meta, tasks, selectedWeek ->
-        if (meta == null) {
-            LifeTrackerUiState.Onboarding
-        } else {
-            val totalWeeks = meta.totalWeeks
-            val inceptionTimestamp = meta.inceptionTimestamp
+        withContext(Dispatchers.Default) {
+            if (meta == null) {
+                LifeTrackerUiState.Onboarding
+            } else {
+                val totalWeeks = meta.totalWeeks
+                val inceptionTimestamp = meta.inceptionTimestamp
 
-            // Calculate current week index since inception
-            val elapsedMillis = System.currentTimeMillis() - inceptionTimestamp
-            val weekInMillis = 7 * 24 * 60 * 60 * 1000L
-            val computedWeek = (elapsedMillis / weekInMillis).toInt()
-            val currentWeek = computedWeek.coerceIn(0, totalWeeks - 1)
+                // Calculate current week index since inception
+                val elapsedMillis = System.currentTimeMillis() - inceptionTimestamp
+                val weekInMillis = 7 * 24 * 60 * 60 * 1000L
+                val computedWeek = (elapsedMillis / weekInMillis).toInt()
+                val currentWeek = computedWeek.coerceIn(0, totalWeeks - 1)
 
-            // Selected week defaults to current active week if not set
-            val activeSelectedWeek = selectedWeek ?: currentWeek
+                // Selected week defaults to current active week if not set
+                val activeSelectedWeek = selectedWeek ?: currentWeek
 
-            // Group tasks by week to calculate success rates globally
-            val tasksGroupedByWeek = tasks.groupBy { it.weekIndex }
-            val weekColors = (0 until totalWeeks).associateWith { wIndex ->
-                val weekTasks = tasksGroupedByWeek[wIndex] ?: emptyList()
-                val totalCreated = weekTasks.size
-                if (totalCreated == 0) {
-                    0
-                } else {
-                    val completed = weekTasks.count { it.isCompleted == 1 }
-                    val sr = (completed.toFloat() / totalCreated.toFloat()) * 100f
-                    when {
-                        sr == 0f -> 0
-                        sr < 33f -> 1
-                        sr < 66f -> 2
-                        sr < 100f -> 3
-                        else -> 4
+                // Group tasks by week to calculate success rates globally
+                val tasksGroupedByWeek = tasks.groupBy { it.weekIndex }
+                val weekColors = (0 until totalWeeks).associateWith { wIndex ->
+                    val weekTasks = tasksGroupedByWeek[wIndex] ?: emptyList()
+                    val totalCreated = weekTasks.size
+                    if (totalCreated == 0) {
+                        0
+                    } else {
+                        val completed = weekTasks.count { it.isCompleted == 1 }
+                        val sr = (completed.toFloat() / totalCreated.toFloat()) * 100f
+                        when {
+                            sr == 0f -> 0
+                            sr < 33f -> 1
+                            sr < 66f -> 2
+                            sr < 100f -> 3
+                            else -> 4
+                        }
                     }
                 }
+
+                // Tasks corresponding to the currently selected week index
+                val selectedWeekTasks = tasksGroupedByWeek[activeSelectedWeek] ?: emptyList()
+                val currentWeekTasks = tasksGroupedByWeek[currentWeek] ?: emptyList()
+
+                LifeTrackerUiState.Dashboard(
+                    meta = meta,
+                    currentWeekIndex = currentWeek,
+                    selectedWeekIndex = activeSelectedWeek,
+                    weekColors = weekColors,
+                    selectedWeekTasks = selectedWeekTasks,
+                    currentWeekTasks = currentWeekTasks
+                )
             }
-
-            // Tasks corresponding to the currently selected week index
-            val selectedWeekTasks = tasksGroupedByWeek[activeSelectedWeek] ?: emptyList()
-            val currentWeekTasks = tasksGroupedByWeek[currentWeek] ?: emptyList()
-
-            LifeTrackerUiState.Dashboard(
-                meta = meta,
-                currentWeekIndex = currentWeek,
-                selectedWeekIndex = activeSelectedWeek,
-                weekColors = weekColors,
-                selectedWeekTasks = selectedWeekTasks,
-                currentWeekTasks = currentWeekTasks
-            )
         }
     }.stateIn(
         scope = viewModelScope,
@@ -190,7 +233,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     )
 
     fun initializeTimeline(years: Int, goal: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val totalWeeks = years * 52
             val meta = TimelineMeta(
                 targetYears = years,
@@ -207,7 +250,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun addTask(title: String, weekIndex: Int, dayOfWeek: Int, routineId: String? = null) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val task = DailyTask(
                 taskId = UUID.randomUUID().toString(),
                 weekIndex = weekIndex,
@@ -222,7 +265,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun toggleTaskCompletion(task: DailyTask) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val willBeCompleted = task.isCompleted == 0
             val updated = task.copy(isCompleted = if (willBeCompleted) 1 else 0)
             repository.updateTask(updated)
@@ -241,13 +284,13 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun deleteTask(taskId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.deleteTask(taskId)
         }
     }
 
     fun resetTimeline() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.resetApp()
             _selectedWeekIndex.value = null
             saveUserGoal("")

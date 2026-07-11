@@ -39,6 +39,9 @@ interface TimelineDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category)
 
+    @Update
+    suspend fun updateCategory(category: Category)
+
     @Query("DELETE FROM categories WHERE category_id = :categoryId")
     suspend fun deleteCategory(categoryId: String)
 
@@ -60,6 +63,9 @@ interface TimelineDao {
 
     @Query("DELETE FROM routines WHERE routine_id = :routineId")
     suspend fun deleteRoutine(routineId: String)
+
+    @Query("DELETE FROM routines WHERE category_id = :categoryId")
+    suspend fun deleteRoutinesForCategory(categoryId: String)
 
     @Query("DELETE FROM routines")
     suspend fun clearAllRoutines()
