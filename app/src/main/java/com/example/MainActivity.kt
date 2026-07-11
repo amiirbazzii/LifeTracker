@@ -82,8 +82,8 @@ fun LifeTrackerApp(
                 )
             }
             is LifeTrackerUiState.Dashboard -> {
-                val categories by viewModel.allCategories.collectAsState()
-                val routines by viewModel.allRoutines.collectAsState()
+                val categories by viewModel.allCategories.collectAsStateWithLifecycle()
+                val routines by viewModel.allRoutines.collectAsStateWithLifecycle()
 
                 when (currentScreen) {
                     "goal_input" -> {
@@ -101,8 +101,8 @@ fun LifeTrackerApp(
                         )
                     }
                     "goal_hub" -> {
-                        val userPoints by viewModel.userPoints.collectAsState()
-                        val rewards by viewModel.allRewards.collectAsState()
+                        val userPoints by viewModel.userPoints.collectAsStateWithLifecycle()
+                        val rewards by viewModel.allRewards.collectAsStateWithLifecycle()
 
                         GoalHubScreen(
                             grandGoal = userGoal,
@@ -115,7 +115,12 @@ fun LifeTrackerApp(
                             onAddReward = { name, cost -> viewModel.onAddReward(name, cost) },
                             onClaimReward = { reward -> viewModel.onClaimReward(reward) },
                             onEditGrandGoal = { currentScreen = "goal_input" },
-                            onBack = { currentScreen = "dashboard" }
+                            onBack = { currentScreen = "dashboard" },
+                            onSaveGrandGoal = { newGoal -> viewModel.saveUserGoal(newGoal) },
+                            onReset = {
+                                viewModel.resetTimeline()
+                                currentScreen = "dashboard"
+                            }
                         )
                     }
                     else -> {

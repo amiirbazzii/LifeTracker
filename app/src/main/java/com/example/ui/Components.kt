@@ -2,13 +2,19 @@ package com.example.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
@@ -25,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.DailyTask
@@ -33,6 +40,262 @@ import com.example.data.Routine
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+
+enum class SystemHeaderMode {
+    DASHBOARD, GOAL_HUB
+}
+
+data class NavigationItemData(
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val testTag: String
+)
+
+@Composable
+fun BaseSystemHeader(
+    mode: SystemHeaderMode,
+    targetYears: Int = 5,
+    userGoal: String = "",
+    onEditGoalClick: () -> Unit = {},
+    activeSectionTitle: String = "",
+    userPoints: Int = 0,
+    onBack: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val isDark = isSystemInDarkTheme()
+    val primaryLabelColor = if (isDark) MonochromeWhite else MonochromeBlack
+    val descriptorColor = Zinc500
+    val highContrastBorderColor = if (isDark) MonochromeWhite else MonochromeBlack
+    val borderAlphaColor = highContrastBorderColor.copy(alpha = 0.15f)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                BorderStroke(DesignTokens.StrokeMedium, borderAlphaColor),
+                RoundedCornerShape(DesignTokens.PaddingZero)
+            )
+            .clickable(enabled = mode == SystemHeaderMode.DASHBOARD) { onEditGoalClick() }
+            .padding(DesignTokens.PaddingMedium)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (mode == SystemHeaderMode.DASHBOARD) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = DesignTokens.PaddingLarge)
+                ) {
+                    Text(
+                        text = "YOUR NEXT $targetYears YEAR GOAL",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = descriptorColor,
+                            fontSize = 12.sp,
+                            letterSpacing = DesignTokens.LetterSpacingExtraWide,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    val goalTextToShow = if (userGoal.isBlank()) {
+                        "> TAP TO SET AN EXECUTION GOAL"
+                    } else {
+                        userGoal.uppercase()
+                    }
+                    Text(
+                        text = goalTextToShow,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 18.sp,
+                            letterSpacing = DesignTokens.LetterSpacingWide,
+                            color = if (userGoal.isBlank()) GridLevel4 else primaryLabelColor
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                initialDelayMillis = 1000,
+                                velocity = 20.dp
+                            )
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .border(
+                            DesignTokens.StrokeMedium,
+                            highContrastBorderColor.copy(alpha = 0.3f),
+                            RoundedCornerShape(DesignTokens.PaddingZero)
+                        )
+                        .clickable { onEditGoalClick() }
+                        .testTag("more_button"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More Options",
+                        tint = primaryLabelColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            } else {
+                // Goal/Hub Mode
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .border(BorderStroke(DesignTokens.StrokeMedium, highContrastBorderColor))
+                        .clickable { onBack() }
+                        .testTag("hub_back_button"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close/Dismiss",
+                        tint = primaryLabelColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = DesignTokens.PaddingMedium)
+                ) {
+                    Text(
+                        text = "ACTIVE SYSTEM MODULE",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = descriptorColor,
+                            letterSpacing = DesignTokens.LetterSpacingExtraWide
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    Text(
+                        text = activeSectionTitle.uppercase(),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = primaryLabelColor,
+                            letterSpacing = DesignTokens.LetterSpacingWide
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .border(BorderStroke(DesignTokens.StrokeMedium, GridLevel4))
+                        .background(GridLevel4.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = userPoints.toString(),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 11.sp,
+                                color = GridLevel4
+                            )
+                        )
+                        Text(
+                            text = "PTS",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 7.sp,
+                                color = GridLevel4
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SharedBottomNavigation(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        // Distinct Top Border Only matching the header's border
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DesignTokens.StrokeMedium)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            val navItems = listOf(
+                NavigationItemData("GOAL TREE", Icons.AutoMirrored.Filled.List, "tab_goal_tree"),
+                NavigationItemData("REWARDS", Icons.Default.Star, "tab_rewards"),
+                NavigationItemData("OBJECTIVE", Icons.Default.Edit, "tab_objective"),
+                NavigationItemData("SETTINGS", Icons.Default.Settings, "tab_settings")
+            )
+
+            navItems.forEachIndexed { index, item ->
+                val isSelected = selectedTab == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { onTabSelected(index) }
+                        .testTag(item.testTag),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = DesignTokens.LetterSpacingCondensed
+                            ),
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun LegendPanel() {
@@ -129,7 +392,7 @@ fun EmptyStatePanel(
 }
 
 @Composable
-fun TaskItemRow(
+fun TaskItemRowComponent(
     task: DailyTask,
     inceptionTimestamp: Long,
     isReadOnly: Boolean,

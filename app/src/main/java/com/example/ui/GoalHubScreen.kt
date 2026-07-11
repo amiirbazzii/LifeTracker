@@ -11,10 +11,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,8 +45,10 @@ fun GoalHubScreen(
     onCreateRoutine: (String, String, Int) -> Unit,
     onAddReward: (String, Int) -> Unit,
     onClaimReward: (Reward) -> Unit,
-    onEditGrandGoal: () -> Unit,
-    onBack: () -> Unit
+    onEditGrandGoal: () -> Unit = {},
+    onBack: () -> Unit,
+    onSaveGrandGoal: (String) -> Unit = {},
+    onReset: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     
@@ -52,119 +57,35 @@ fun GoalHubScreen(
     var showRoutineDialog by remember { mutableStateOf(false) }
     var activeCategoryIdForRoutine by remember { mutableStateOf<String?>(null) }
     var showRewardDialog by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
+
+    val activeSectionTitle = when (selectedTab) {
+        0 -> "GOAL TREE"
+        1 -> "REWARD HUB"
+        2 -> "GOAL OBJECTIVE"
+        else -> "SYSTEM SETTINGS"
+    }
 
     Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall)
+                    .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingMedium)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .size(DesignTokens.ControlBoxSize)
-                            .border(
-                                DesignTokens.StrokeMedium,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .testTag("hub_back_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    Text(
-                        text = "MATRIX HUB PROTOCOL",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = DesignTokens.LetterSpacingWide
-                        ),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.width(DesignTokens.ControlBoxSize))
-                }
-
-                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-
-                // Points & Grand Goal Box
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            DesignTokens.StrokeThick,
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(DesignTokens.PaddingZero)
-                        )
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clickable { onEditGrandGoal() }
-                        .padding(DesignTokens.PaddingMedium)
-                        .testTag("grand_goal_hub_card")
-                ) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "CORE OBJECTIVE:",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    color = Zinc500,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            
-                            // Beautiful Neon points display
-                            Box(
-                                modifier = Modifier
-                                    .border(
-                                        DesignTokens.StrokeMedium,
-                                        GridLevel4,
-                                        RoundedCornerShape(DesignTokens.PaddingZero)
-                                    )
-                                    .padding(horizontal = DesignTokens.PaddingSmall, vertical = DesignTokens.PaddingMicro)
-                            ) {
-                                Text(
-                                    text = "$userPoints PTS",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontFamily = FontFamily.Monospace,
-                                        color = GridLevel4,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-                        Text(
-                            text = if (grandGoal.isNotBlank()) grandGoal.uppercase() else "NO GRAND TARGET ASSIGNED",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
+                BaseSystemHeader(
+                    mode = SystemHeaderMode.GOAL_HUB,
+                    activeSectionTitle = activeSectionTitle,
+                    userPoints = userPoints,
+                    onBack = onBack
+                )
             }
         },
         bottomBar = {
-            // Action button inside tabs handles custom additions beautifully
+            SharedBottomNavigation(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -173,72 +94,42 @@ fun GoalHubScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.primary,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                divider = {
-                    HorizontalDivider(
-                        thickness = DesignTokens.DividerThickness,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            // Render active sub-screen based on selectedTab
+            when (selectedTab) {
+                0 -> {
+                    GoalTreeTab(
+                        categories = categories,
+                        routines = routines,
+                        onAddCategoryClick = { showCategoryDialog = true },
+                        onAddRoutineClick = { catId ->
+                            activeCategoryIdForRoutine = catId
+                            showRoutineDialog = true
+                        }
                     )
                 }
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    modifier = Modifier.testTag("tab_goal_tree"),
-                    text = {
-                        Text(
-                            text = "GOAL TREE",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = DesignTokens.LetterSpacingWide
-                            )
-                        )
-                    }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    modifier = Modifier.testTag("tab_rewards_shop"),
-                    text = {
-                        Text(
-                            text = "REWARDS SHOP",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = DesignTokens.LetterSpacingWide
-                            )
-                        )
-                    }
-                )
-            }
-
-            if (selectedTab == 0) {
-                GoalTreeTab(
-                    categories = categories,
-                    routines = routines,
-                    onAddCategoryClick = { showCategoryDialog = true },
-                    onAddRoutineClick = { catId ->
-                        activeCategoryIdForRoutine = catId
-                        showRoutineDialog = true
-                    }
-                )
-            } else {
-                RewardsShopTab(
-                    rewards = rewards,
-                    userPoints = userPoints,
-                    onAddRewardClick = { showRewardDialog = true },
-                    onClaimReward = onClaimReward
-                )
+                1 -> {
+                    RewardsShopTab(
+                        rewards = rewards,
+                        userPoints = userPoints,
+                        onAddRewardClick = { showRewardDialog = true },
+                        onClaimReward = onClaimReward
+                    )
+                }
+                2 -> {
+                    ObjectiveTab(
+                        currentGoal = grandGoal,
+                        onSaveGoal = onSaveGrandGoal
+                    )
+                }
+                3 -> {
+                    SettingsTab(
+                        userPoints = userPoints,
+                        categoriesCount = categories.size,
+                        routinesCount = routines.size,
+                        rewardsCount = rewards.size,
+                        onResetClick = { showResetConfirmDialog = true }
+                    )
+                }
             }
         }
     }
@@ -475,7 +366,57 @@ fun GoalHubScreen(
             }
         )
     }
+
+    // Reset Confirmation Dialog
+    if (showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            title = {
+                Text(
+                    text = DesignTokens.RESET_DIALOG_TITLE,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = DesignTokens.RESET_DIALOG_TEXT,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetConfirmDialog = false
+                        onReset()
+                    },
+                    modifier = Modifier.testTag("hub_reset_confirm_btn")
+                ) {
+                    Text(
+                        DesignTokens.RESET_CONFIRM,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirmDialog = false }) {
+                    Text(
+                        DesignTokens.RESET_CANCEL,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+        )
+    }
 }
+
+
 
 @Composable
 fun GoalTreeTab(
@@ -560,7 +501,7 @@ fun GoalTreeTab(
                         .fillMaxSize()
                         .padding(horizontal = DesignTokens.PaddingLarge),
                     verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Leave space for Floating action or layout spacing
+                    contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(categories) { category ->
                         val categoryRoutines = routines.filter { it.categoryId == category.id }
@@ -617,7 +558,8 @@ fun CategoryCard(
                         )
                         .clickable { onAddRoutineClick() }
                         .padding(horizontal = DesignTokens.PaddingSmall, vertical = DesignTokens.PaddingTiny)
-                        .testTag("add_routine_trigger_${category.id}")
+                        .testTag("add_routine_trigger_${category.id}"),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "+ ADD ROUTINE",
@@ -885,5 +827,234 @@ fun RewardCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ObjectiveTab(
+    currentGoal: String,
+    onSaveGoal: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var goalText by remember { mutableStateOf(currentGoal) }
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(DesignTokens.PaddingLarge)
+    ) {
+        Text(
+            text = "CURRENT ACTIVE OBJECTIVE:",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                color = Zinc500,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = DesignTokens.LetterSpacingWide
+            )
+        )
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    DesignTokens.StrokeThick,
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(DesignTokens.PaddingZero)
+                )
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(DesignTokens.PaddingMedium)
+        ) {
+            Text(
+                text = if (currentGoal.isNotBlank()) currentGoal.uppercase() else "NO CORE OBJECTIVE YET ASSIGNED",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = if (currentGoal.isNotBlank()) MaterialTheme.colorScheme.primary else GridLevel4,
+                    lineHeight = 20.sp
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
+
+        Text(
+            text = "RECONFIGURE GOAL PROTOCOL:",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                color = Zinc500,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = DesignTokens.LetterSpacingWide
+            )
+        )
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+        OutlinedTextField(
+            value = goalText,
+            onValueChange = { goalText = it },
+            placeholder = {
+                Text(
+                    text = "e.g., CONTINUOUS ITERATION // MINIMAL DISTRACTION",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Zinc500,
+                        fontFamily = FontFamily.Monospace
+                    )
+                )
+            },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("hub_goal_input_field"),
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GridLevel4,
+                unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            ),
+            singleLine = false,
+            maxLines = 5
+        )
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
+
+        Button(
+            onClick = { onSaveGoal(goalText.trim()) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DesignTokens.ButtonHeight)
+                .testTag("hub_save_goal_button"),
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GridLevel4,
+                contentColor = MonochromeBlack
+            )
+        ) {
+            Text(
+                text = "COMMIT TO PROFILE",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsTab(
+    userPoints: Int,
+    categoriesCount: Int,
+    routinesCount: Int,
+    rewardsCount: Int,
+    onResetClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(DesignTokens.PaddingLarge),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
+    ) {
+        Text(
+            text = "SYSTEM CONFIG & TELEMETRY",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                color = Zinc500,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = DesignTokens.LetterSpacingWide
+            )
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall)
+        ) {
+            MetricRow(label = "TOTAL POINT BALANCE", value = "$userPoints PTS")
+            MetricRow(label = "ACTIVE SUB-GOAL CATEGORIES", value = categoriesCount.toString())
+            MetricRow(label = "RECURRING ROUTINES TRACKED", value = routinesCount.toString())
+            MetricRow(label = "CUSTOM REWARDS LISTED", value = rewardsCount.toString())
+            MetricRow(label = "DATABASE ENCRYPTION", value = "SQLITE.LOCAL")
+        }
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
+
+        Text(
+            text = "SYSTEM OPERATIONS",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                color = Zinc500,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = DesignTokens.LetterSpacingWide
+            )
+        )
+
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+        Button(
+            onClick = onResetClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DesignTokens.ButtonHeight)
+                .testTag("hub_reset_system_button"),
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color.Red
+            ),
+            border = BorderStroke(DesignTokens.StrokeThick, Color.Red.copy(alpha = 0.5f))
+        ) {
+            Text(
+                text = "RESET ALL PROFILE SYSTEMS",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun MetricRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                DesignTokens.StrokeThin,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                RoundedCornerShape(DesignTokens.PaddingZero)
+            )
+            .padding(DesignTokens.PaddingMedium),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                color = Zinc400
+            )
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        )
     }
 }

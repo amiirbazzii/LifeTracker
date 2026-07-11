@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -120,93 +119,21 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(DesignTokens.PaddingLarge)
+            .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingMedium)
     ) {
-        // App Header conforming to Clean Minimalism HTML mockup
+        // App Goal Banner (Hides completely when input is focused)
         if (!isInputFocused) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                        RoundedCornerShape(DesignTokens.PaddingZero)
-                    )
-                    .padding(DesignTokens.PaddingMedium),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = DesignTokens.PaddingLarge)
-                        .clickable { onEditGoalClick() }
-                ) {
-                    Text(
-                        text = "YOUR NEXT ${state.meta.targetYears} YEAR GOAL",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Zinc500,
-                            fontSize = DesignTokens.FontSizeSmall,
-                            letterSpacing = DesignTokens.LetterSpacingUltraWide,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    val goalTextToShow = if (userGoal.isBlank()) {
-                        "> TAP TO SET AN EXECUTION GOAL"
-                    } else {
-                        userGoal.uppercase()
-                    }
-                    Text(
-                        text = goalTextToShow,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = DesignTokens.LetterSpacingCondensed,
-                            color = if (userGoal.isBlank()) GridLevel4 else MaterialTheme.colorScheme.primary
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                initialDelayMillis = 1000,
-                                velocity = 20.dp
-                            )
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
-                ) {
-                    // More Action Box to go to the goal input / config page
-                    Box(
-                        modifier = Modifier
-                            .size(DesignTokens.ControlBoxSize)
-                            .border(
-                                DesignTokens.StrokeMedium,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .clickable { onEditGoalClick() }
-                            .testTag("more_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More Options",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
+            BaseSystemHeader(
+                mode = SystemHeaderMode.DASHBOARD,
+                targetYears = state.meta.targetYears,
+                userGoal = userGoal,
+                onEditGoalClick = onEditGoalClick
+            )
         }
 
         Spacer(modifier = Modifier.height(spacerHeightTop))
 
+        // Macro Timeline Matrix Block
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -215,245 +142,12 @@ fun DashboardScreen(
                 .clip(RoundedCornerShape(DesignTokens.PaddingZero))
         ) {
             if (topHalfHeight > 24.dp) {
-                // --- TOP HALF: MACRO GRID WINDOW ---
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "MACRO TIMELINE MATRIX (${state.meta.totalWeeks} WEEKS)",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Zinc400,
-                                letterSpacing = DesignTokens.LetterSpacingExtraWide,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        )
-                        Box(
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(DesignTokens.PaddingZero))
-                                .padding(horizontal = DesignTokens.PaddingTiny, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "${state.meta.targetYears}Y GOAL",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = DesignTokens.FontSizeTiny
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Scrollable Grid Matrix using exactly 13 columns mimicking HTML structure
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .border(
-                                DesignTokens.StrokeMedium,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .background(if (isSystemInDarkTheme()) GridLevel0_Dark else Color(0xFFFCFCFC))
-                            .padding(DesignTokens.PaddingTiny)
-                    ) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(13),
-                            horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMicro),
-                            verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMicro),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(
-                                count = state.meta.totalWeeks,
-                                span = { index ->
-                                    if (index == state.currentWeekIndex) {
-                                        GridItemSpan(7)
-                                    } else {
-                                        GridItemSpan(1)
-                                    }
-                                }
-                            ) { weekIdx ->
-                                val isDark = isSystemInDarkTheme()
-                                val isSelected = weekIdx == state.selectedWeekIndex
-                                val isCurrent = weekIdx == state.currentWeekIndex
-
-                                if (isCurrent) {
-                                    val itemStroke = if (isSelected) {
-                                        BorderStroke(DesignTokens.StrokeExtraThick, MaterialTheme.colorScheme.primary)
-                                    } else {
-                                        BorderStroke(DesignTokens.StrokeThick, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
-                                    }
-
-                                    Row(
-                                        modifier = Modifier
-                                            .aspectRatio(7f)
-                                            .clip(RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .background(if (isDark) GridLevel0_Dark else Color(0xFFF0F0F0))
-                                            .border(itemStroke, RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .testTag("week_box_current_active_$weekIdx"),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        for (d in 1..7) {
-                                            val dayTasks = state.currentWeekTasks.filter { it.dayOfWeek == d }
-                                            val total = dayTasks.size
-                                            val dayLevel = if (total == 0) {
-                                                0
-                                            } else {
-                                                val completed = dayTasks.count { it.isCompleted == 1 }
-                                                val sr = (completed.toFloat() / total.toFloat()) * 100f
-                                                when {
-                                                    sr == 0f -> 0
-                                                    sr < 33f -> 1
-                                                    sr < 66f -> 2
-                                                    sr < 100f -> 3
-                                                    else -> 4
-                                                }
-                                            }
-
-                                            val dayColor = when (dayLevel) {
-                                                0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                                                1 -> GridLevel1
-                                                2 -> GridLevel2
-                                                3 -> GridLevel3
-                                                4 -> GridLevel4
-                                                else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                                            }
-
-                                            val isToday = remember(state.meta.inceptionTimestamp, weekIdx, d) {
-                                                Utils.isCellToday(state.meta.inceptionTimestamp, weekIdx, d)
-                                            }
-                                            val isDaySelected = isSelected && taskDayOfWeek == d
-                                            val dayBorder = if (isToday) {
-                                                if (isDaySelected) {
-                                                    BorderStroke(DesignTokens.StrokeExtraThick, GridLevel4)
-                                                } else {
-                                                    BorderStroke(DesignTokens.StrokeThick, GridLevel4)
-                                                }
-                                            } else {
-                                                if (isDaySelected) {
-                                                    BorderStroke(DesignTokens.StrokeThick, MaterialTheme.colorScheme.primary)
-                                                } else {
-                                                    BorderStroke(DesignTokens.StrokeThin, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
-                                                }
-                                            }
-
-                                            val absoluteDayOfMonthText = remember(state.meta.inceptionTimestamp, weekIdx, d) {
-                                                val cal = Calendar.getInstance()
-                                                cal.timeInMillis = state.meta.inceptionTimestamp
-                                                cal.add(Calendar.WEEK_OF_YEAR, weekIdx)
-                                                cal.add(Calendar.DAY_OF_YEAR, d - 1)
-                                                cal.get(Calendar.DAY_OF_MONTH).toString()
-                                            }
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .fillMaxHeight()
-                                                    .background(dayColor)
-                                                    .border(dayBorder, RoundedCornerShape(DesignTokens.PaddingZero))
-                                                    .clickable {
-                                                        onSelectWeek(weekIdx)
-                                                        taskDayOfWeek = d
-                                                    }
-                                                    .testTag("active_week_day_$d"),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    text = absoluteDayOfMonthText,
-                                                    style = MaterialTheme.typography.labelSmall.copy(
-                                                        fontSize = DesignTokens.FontSizeTiny,
-                                                        fontWeight = if (isDaySelected) FontWeight.Black else FontWeight.Bold,
-                                                        fontFamily = FontFamily.Monospace,
-                                                        color = if (isToday) {
-                                                            if (dayLevel == 4) MonochromeBlack else GridLevel4
-                                                        } else if (dayLevel > 0) {
-                                                            MonochromeWhite
-                                                        } else {
-                                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                                        }
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    val level = state.weekColors[weekIdx] ?: 0
-                                    val cellColor = when (level) {
-                                        0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                                        1 -> GridLevel1
-                                        2 -> GridLevel2
-                                        3 -> GridLevel3
-                                        4 -> GridLevel4
-                                        else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                                    }
-
-                                    val itemStroke = if (isSelected) {
-                                        BorderStroke(DesignTokens.StrokeExtraThick, MaterialTheme.colorScheme.primary)
-                                    } else {
-                                        BorderStroke(DesignTokens.StrokeThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                    }
-
-                                    Box(
-                                        modifier = Modifier
-                                            .aspectRatio(1f)
-                                            .clip(RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .background(cellColor)
-                                            .border(itemStroke, RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .clickable {
-                                                onSelectWeek(weekIdx)
-                                            }
-                                            .testTag("week_box_$weekIdx"),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = (weekIdx + 1).toString(),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = DesignTokens.FontSizeMicro,
-                                                fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
-                                                fontFamily = FontFamily.Monospace,
-                                                color = if (level > 0) MonochromeWhite 
-                                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                                            ),
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-                    // Sub-grid footer zone: Inception dates + Legend Panel
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val yearFormatter = SimpleDateFormat("yyyy", Locale.US)
-                        val inceptionYear = yearFormatter.format(Date(state.meta.inceptionTimestamp))
-                        val quarter = 1 + (Calendar.getInstance().get(Calendar.MONTH) / 3)
-                        Text(
-                            text = "INCEPTION: ${inceptionYear}.Q${quarter}",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = DesignTokens.FontSizeTiny,
-                                color = Zinc500,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-
-                        LegendPanel()
-                    }
-                }
+                MacroTimelineMatrix(
+                    state = state,
+                    taskDayOfWeek = taskDayOfWeek,
+                    onSelectWeek = onSelectWeek,
+                    onSelectDay = { d -> taskDayOfWeek = d }
+                )
             }
         }
 
@@ -461,7 +155,7 @@ fun DashboardScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f * topHalfAlpha), thickness = DesignTokens.DividerThickness)
         Spacer(modifier = Modifier.height(spacerHeightBot))
 
-        // --- BOTTOM HALF: MICRO PERSISTENT TASK MANAGER ---
+        // --- MICRO PERSISTENT TASK MANAGER (BOTTOM HALF) ---
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -474,518 +168,881 @@ fun DashboardScreen(
             val totalCount = filteredTasks.size
             val completionRate = if (totalCount == 0) 0 else (completedCount * 100 / totalCount)
 
-            // Dynamic header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = DesignTokens.PaddingSmall),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = if (isInputFocused) Alignment.CenterVertically else Alignment.Bottom
-            ) {
-                Column {
-                    val headerText = if (state.selectedWeekIndex == state.currentWeekIndex) {
-                        "WEEK ${state.selectedWeekIndex + 1} : ${Utils.getDayAbsoluteDateString(state.meta.inceptionTimestamp, state.selectedWeekIndex, taskDayOfWeek)}"
+            // 1. DashboardHeaderComponent
+            DashboardHeaderComponent(
+                selectedWeekIndex = state.selectedWeekIndex,
+                currentWeekIndex = state.currentWeekIndex,
+                inceptionTimestamp = state.meta.inceptionTimestamp,
+                taskDayOfWeek = taskDayOfWeek,
+                completedCount = completedCount,
+                totalCount = totalCount,
+                completionRate = completionRate,
+                isInputFocused = isInputFocused,
+                onCloseInputFocus = {
+                    focusManager.clearFocus()
+                    selectedCategory = null
+                    selectedRoutine = null
+                    newTaskTitle = ""
+                }
+            )
+
+            // 4. TaskListSectionComponent
+            TaskListSectionComponent(
+                filteredTasks = filteredTasks,
+                isHistorical = isHistorical,
+                inceptionTimestamp = state.meta.inceptionTimestamp,
+                categories = categories,
+                routines = routines,
+                onToggleTask = { task ->
+                    val isCompletedNow = task.isCompleted == 1
+                    if (!isCompletedNow && task.routineId != null) {
+                        onToggleTask(task)
+                        activeRoutineIdForMilestoneVerification = task.routineId
                     } else {
-                        "WEEK ${state.selectedWeekIndex + 1} : ${Utils.getWeekRangeString(state.meta.inceptionTimestamp, state.selectedWeekIndex)}"
+                        onToggleTask(task)
                     }
-                    Text(
-                        text = headerText,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = DesignTokens.LetterSpacingExtraWide
-                        ),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    if (!isInputFocused) {
-                        Text(
-                            text = "$completedCount OF $totalCount TASKS COMPLETED",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = DesignTokens.FontSizeSmall,
-                                color = Zinc500
-                            )
-                        )
-                    }
-                }
-
-                if (isInputFocused) {
-                    Box(
-                        modifier = Modifier
-                            .size(DesignTokens.ControlBoxSize)
-                            .border(
-                                DesignTokens.StrokeMedium,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .clickable {
-                                focusManager.clearFocus()
-                                selectedCategory = null
-                                selectedRoutine = null
-                                newTaskTitle = ""
-                            }
-                            .testTag("close_input_focus_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close Input",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                } else {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "SR: $completionRate%",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = GridLevel4,
-                                fontWeight = FontWeight.Black,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = -1.sp
-                            )
-                        )
-                        val level = when {
-                            totalCount == 0 -> 0
-                            else -> {
-                                val sr = (completedCount.toFloat() / totalCount.toFloat()) * 100f
-                                when {
-                                    sr == 0f -> 0
-                                    sr < 33f -> 1
-                                    sr < 66f -> 2
-                                    sr < 100f -> 3
-                                    else -> 4
-                                }
-                            }
-                        }
-                        Text(
-                            text = "LEVEL $level",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Zinc500,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Task list container
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                if (filteredTasks.isEmpty()) {
-                    EmptyStatePanel(isHistorical = isHistorical)
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
-                    ) {
-                        items(
-                            count = filteredTasks.size,
-                            key = { index -> filteredTasks[index].taskId }
-                        ) { index ->
-                            val task = filteredTasks[index]
-                            TaskItemRow(
-                                task = task,
-                                inceptionTimestamp = state.meta.inceptionTimestamp,
-                                isReadOnly = isHistorical,
-                                onToggle = { t ->
-                                    val isCompletedNow = t.isCompleted == 1
-                                    if (!isCompletedNow && t.routineId != null) {
-                                        onToggleTask(t)
-                                        activeRoutineIdForMilestoneVerification = t.routineId
-                                    } else {
-                                        onToggleTask(t)
-                                    }
-                                },
-                                onDelete = onDeleteTask,
-                                categories = categories,
-                                routines = routines
-                            )
-                        }
-                    }
-                }
-            }
+                },
+                onDeleteTask = onDeleteTask,
+                modifier = Modifier.weight(1f)
+            )
 
             Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
 
-            // Task creating panel
+            // Footer Zone (Read Only indicator or Add Task controllers)
             if (isHistorical) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            DesignTokens.StrokeMedium,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            RoundedCornerShape(DesignTokens.PaddingZero)
-                        )
-                        .padding(DesignTokens.PaddingMedium),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                ReadOnlyBanner()
+            } else {
+                // 3. ContextualChipsComponent
+                if (isInputFocused || selectedCategory != null || newTaskTitle.isNotEmpty()) {
+                    ContextualChipsComponent(
+                        categories = categories,
+                        routines = routines,
+                        selectedCategory = selectedCategory,
+                        selectedRoutine = selectedRoutine,
+                        onCategorySelected = { selectedCategory = it },
+                        onRoutineSelected = { selectedRoutine = it },
+                        onNewTaskTitleChange = { newTaskTitle = it },
+                        newTaskTitle = newTaskTitle
+                    )
+                }
+
+                // 2. TaskInputSectionComponent
+                TaskInputSectionComponent(
+                    newTaskTitle = newTaskTitle,
+                    onNewTaskTitleChange = { newTaskTitle = it },
+                    selectedWeekIndex = state.selectedWeekIndex,
+                    taskDayOfWeek = taskDayOfWeek,
+                    inceptionTimestamp = state.meta.inceptionTimestamp,
+                    onDayOfWeekToggle = {
+                        taskDayOfWeek = if (taskDayOfWeek == 7) 1 else taskDayOfWeek + 1
+                    },
+                    onAddTask = {
+                        val title = newTaskTitle.trim()
+                        if (title.isNotEmpty()) {
+                            onAddTask(title, state.selectedWeekIndex, taskDayOfWeek, selectedRoutine?.id)
+                            newTaskTitle = ""
+                            selectedCategory = null
+                            selectedRoutine = null
+                        } else {
+                            focusManager.clearFocus()
+                        }
+                    },
+                    onFocusChanged = { isInputFocused = it }
+                )
+            }
+        }
+    }
+
+    // Milestone completion Dialog box
+    if (activeRoutineIdForMilestoneVerification != null) {
+        MilestoneVerificationDialog(
+            onDismiss = { activeRoutineIdForMilestoneVerification = null },
+            onConfirm = {
+                activeRoutineIdForMilestoneVerification?.let { routineId ->
+                    onIncrementRoutineCompletion(routineId)
+                }
+                activeRoutineIdForMilestoneVerification = null
+            }
+        )
+    }
+}
+
+// ==========================================
+// SUB-COMPONENTS (Component-Based Pass)
+// ==========================================
+
+@Composable
+fun DashboardHeaderComponent(
+    selectedWeekIndex: Int,
+    currentWeekIndex: Int,
+    inceptionTimestamp: Long,
+    taskDayOfWeek: Int,
+    completedCount: Int,
+    totalCount: Int,
+    completionRate: Int,
+    isInputFocused: Boolean,
+    onCloseInputFocus: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = DesignTokens.PaddingSmall),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = if (isInputFocused) Alignment.CenterVertically else Alignment.Bottom
+    ) {
+        Column {
+            val headerText = if (selectedWeekIndex == currentWeekIndex) {
+                "WEEK ${selectedWeekIndex + 1} : ${Utils.getDayAbsoluteDateString(inceptionTimestamp, selectedWeekIndex, taskDayOfWeek)}"
+            } else {
+                "WEEK ${selectedWeekIndex + 1} : ${Utils.getWeekRangeString(inceptionTimestamp, selectedWeekIndex)}"
+            }
+            val isDark = isSystemInDarkTheme()
+            val primaryLabelColor = if (isDark) MonochromeWhite else MonochromeBlack
+            Text(
+                text = headerText,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                ),
+                color = primaryLabelColor
+            )
+            if (!isInputFocused) {
+                Text(
+                    text = "$completedCount OF $totalCount TASKS COMPLETED",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = DesignTokens.FontSizeSmall,
+                        color = Zinc500
+                    )
+                )
+            }
+        }
+
+        if (isInputFocused) {
+            Box(
+                modifier = Modifier
+                    .size(DesignTokens.ControlBoxSize)
+                    .border(
+                        DesignTokens.StrokeMedium,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        RoundedCornerShape(DesignTokens.PaddingZero)
+                    )
+                    .clickable { onCloseInputFocus() }
+                    .testTag("close_input_focus_button"),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close Input",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        } else {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "SR: $completionRate%",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = GridLevel4,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = -1.sp
+                    )
+                )
+                val level = when {
+                    totalCount == 0 -> 0
+                    else -> {
+                        val sr = (completedCount.toFloat() / totalCount.toFloat()) * 100f
+                        when {
+                            sr == 0f -> 0
+                            sr < 33f -> 1
+                            sr < 66f -> 2
+                            sr < 100f -> 3
+                            else -> 4
+                        }
+                    }
+                }
+                Text(
+                    text = "LEVEL $level",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Zinc500,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TaskInputSectionComponent(
+    newTaskTitle: String,
+    onNewTaskTitleChange: (String) -> Unit,
+    selectedWeekIndex: Int,
+    taskDayOfWeek: Int,
+    inceptionTimestamp: Long,
+    onDayOfWeekToggle: () -> Unit,
+    onAddTask: () -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(DesignTokens.InputHeight)
+            .border(
+                DesignTokens.StrokeMedium,
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(DesignTokens.PaddingZero)
+            )
+            .background(MaterialTheme.colorScheme.background),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(62.dp)
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable { onDayOfWeekToggle() }
+                .testTag("day_toggle_button"),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                val currentDayAbbr = remember(inceptionTimestamp, selectedWeekIndex, taskDayOfWeek) {
+                    val cellTimeInMillis = inceptionTimestamp + (selectedWeekIndex * 7L + (taskDayOfWeek - 1)) * 24L * 60L * 60L * 1000L
+                    val sdf = SimpleDateFormat("EEE", Locale.getDefault())
+                    sdf.format(Date(cellTimeInMillis)).uppercase()
+                }
+                Text(
+                    text = currentDayAbbr,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = DesignTokens.FontSizeMedium
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Text(
+                    text = "DAY",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 7.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(DesignTokens.StrokeMedium)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+
+        TextField(
+            value = newTaskTitle,
+            onValueChange = onNewTaskTitleChange,
+            placeholder = {
+                Text(
+                    text = "_ INPUTTING...",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = DesignTokens.FontSizeMedium,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = DesignTokens.LetterSpacingWide
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                )
+            },
+            singleLine = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.primary,
+                unfocusedTextColor = MaterialTheme.colorScheme.primary
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { onAddTask() }
+            ),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .onFocusChanged { fState -> onFocusChanged(fState.isFocused) }
+                .testTag("task_input_field")
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(DesignTokens.InputHeight)
+                .background(GridLevel4)
+                .clickable { onAddTask() }
+                .testTag("add_task_button"),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "+",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = MonochromeBlack
+            )
+        }
+    }
+}
+
+@Composable
+fun ContextualChipsComponent(
+    categories: List<Category>,
+    routines: List<Routine>,
+    selectedCategory: Category?,
+    selectedRoutine: Routine?,
+    onCategorySelected: (Category?) -> Unit,
+    onRoutineSelected: (Routine?) -> Unit,
+    onNewTaskTitleChange: (String) -> Unit,
+    newTaskTitle: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = DesignTokens.PaddingSmall)
+    ) {
+        // Category Chips Row
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("category_chip_row"),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (selectedCategory != null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+                            .border(
+                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.error),
+                                RoundedCornerShape(DesignTokens.PaddingZero)
+                            )
+                            .clickable {
+                                onCategorySelected(null)
+                                onRoutineSelected(null)
+                            }
+                            .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                            .testTag("clear_category_chip"),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Read Only",
-                            tint = Zinc500,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
                         Text(
-                            text = DesignTokens.READ_ONLY_BANNER,
+                            text = "CLEAR SELECTION",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                letterSpacing = DesignTokens.LetterSpacingWide
-                            ),
-                            color = Zinc500
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = DesignTokens.FontSizeSmall
+                            )
                         )
                     }
                 }
-            } else {
-                // Smart Task Category & Routine selection chips
-                if (isInputFocused || selectedCategory != null || newTaskTitle.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = DesignTokens.PaddingSmall)
-                    ) {
-                        // Category Chips Row
-                        LazyRow(
+            }
+
+            items(categories) { category ->
+                val isSel = selectedCategory?.id == category.id
+                val chipBg = if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent
+                val chipText = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                val chipBorder = if (isSel) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+
+                Box(
+                    modifier = Modifier
+                        .background(chipBg)
+                        .border(
+                            BorderStroke(DesignTokens.StrokeMedium, if (isSel) MaterialTheme.colorScheme.primary else chipBorder),
+                            RoundedCornerShape(DesignTokens.PaddingZero)
+                        )
+                        .clickable {
+                            if (isSel) {
+                                onCategorySelected(null)
+                                onRoutineSelected(null)
+                            } else {
+                                onCategorySelected(category)
+                                onRoutineSelected(null)
+                            }
+                        }
+                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                        .testTag("category_chip_${category.name}"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = category.name.uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = chipText,
+                            fontSize = DesignTokens.FontSizeSmall
+                        )
+                    )
+                }
+            }
+        }
+
+        if (selectedCategory != null) {
+            val associatedRoutines = routines.filter { it.categoryId == selectedCategory.id }
+            if (associatedRoutines.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("routine_chip_row"),
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items(associatedRoutines) { routine ->
+                        val isSel = selectedRoutine?.id == routine.id
+                        val chipBg = if (isSel) GridLevel4 else Color.Transparent
+                        val chipText = if (isSel) MonochromeBlack else MaterialTheme.colorScheme.primary
+                        val chipBorder = if (isSel) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("category_chip_row"),
-                            horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (selectedCategory != null) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
-                                            .border(
-                                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.error),
-                                                RoundedCornerShape(DesignTokens.PaddingZero)
-                                            )
-                                            .clickable {
-                                                selectedCategory = null
-                                                selectedRoutine = null
-                                            }
-                                            .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
-                                            .testTag("clear_category_chip"),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "CLEAR SELECTION",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.error,
-                                                fontSize = DesignTokens.FontSizeSmall
-                                            )
-                                        )
+                                .background(chipBg)
+                                .border(BorderStroke(DesignTokens.StrokeMedium, chipBorder), RoundedCornerShape(DesignTokens.PaddingZero))
+                                .clickable {
+                                    if (isSel) {
+                                        onRoutineSelected(null)
+                                    } else {
+                                        onRoutineSelected(routine)
+                                        if (newTaskTitle.isBlank()) {
+                                            onNewTaskTitleChange(routine.title)
+                                        }
                                     }
                                 }
-                            }
+                                .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                                .testTag("routine_chip_${routine.title}"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = routine.title.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold,
+                                    color = chipText,
+                                    fontSize = DesignTokens.FontSizeSmall
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+    }
+}
 
-                            items(categories) { category ->
-                                val isSel = selectedCategory?.id == category.id
-                                val chipBg = if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent
-                                val chipText = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                                val chipBorder = if (isSel) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+@Composable
+fun TaskListSectionComponent(
+    filteredTasks: List<DailyTask>,
+    isHistorical: Boolean,
+    inceptionTimestamp: Long,
+    categories: List<Category>,
+    routines: List<Routine>,
+    onToggleTask: (DailyTask) -> Unit,
+    onDeleteTask: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        if (filteredTasks.isEmpty()) {
+            EmptyStatePanel(isHistorical = isHistorical)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
+            ) {
+                items(
+                    count = filteredTasks.size,
+                    key = { index -> filteredTasks[index].taskId }
+                ) { index ->
+                    val task = filteredTasks[index]
+                    TaskItemRowComponent(
+                        task = task,
+                        inceptionTimestamp = inceptionTimestamp,
+                        isReadOnly = isHistorical,
+                        onToggle = onToggleTask,
+                        onDelete = onDeleteTask,
+                        categories = categories,
+                        routines = routines
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReadOnlyBanner(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                DesignTokens.StrokeMedium,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                RoundedCornerShape(DesignTokens.PaddingZero)
+            )
+            .padding(DesignTokens.PaddingMedium),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Read Only",
+                tint = Zinc500,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
+            Text(
+                text = DesignTokens.READ_ONLY_BANNER,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                ),
+                color = Zinc500
+            )
+        }
+    }
+}
+
+@Composable
+fun MilestoneVerificationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(DesignTokens.PaddingZero),
+        title = {
+            Text(
+                text = "[SYSTEM VERIFICATION]",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = DesignTokens.LetterSpacingWide
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+        },
+        text = {
+            Text(
+                text = "Great job on today's effort! Did this work result in fully achieving the macro milestone (e.g., Article Published), or is it still a work in progress?",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    lineHeight = 20.sp
+                ),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        },
+        confirmButton = {
+            Box(
+                modifier = Modifier
+                    .background(GridLevel4)
+                    .border(DesignTokens.StrokeMedium, MonochromeBlack, RoundedCornerShape(DesignTokens.PaddingZero))
+                    .clickable { onConfirm() }
+                    .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                    .testTag("milestone_achieved_button")
+            ) {
+                Text(
+                    text = "MILESTONE ACHIEVED!",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Black,
+                        color = MonochromeBlack
+                    )
+                )
+            }
+        },
+        dismissButton = {
+            Box(
+                modifier = Modifier
+                    .border(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary, RoundedCornerShape(DesignTokens.PaddingZero))
+                    .clickable { onDismiss() }
+                    .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
+                    .testTag("still_in_progress_button")
+            ) {
+                Text(
+                    text = "STILL IN PROGRESS",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun MacroTimelineMatrix(
+    state: LifeTrackerUiState.Dashboard,
+    taskDayOfWeek: Int,
+    onSelectWeek: (Int) -> Unit,
+    onSelectDay: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = isSystemInDarkTheme()
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "MACRO TIMELINE MATRIX (${state.meta.totalWeeks} WEEKS)",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = Zinc400,
+                    letterSpacing = DesignTokens.LetterSpacingExtraWide,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            )
+            Box(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(DesignTokens.PaddingZero))
+                    .padding(horizontal = DesignTokens.PaddingTiny, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "${state.meta.targetYears}Y GOAL",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = DesignTokens.FontSizeTiny
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Scrollable Grid Matrix using exactly 13 columns mimicking HTML structure
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .border(
+                    DesignTokens.StrokeMedium,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    RoundedCornerShape(DesignTokens.PaddingZero)
+                )
+                .background(if (isDark) GridLevel0_Dark else Color(0xFFFCFCFC))
+                .padding(DesignTokens.PaddingTiny)
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(13),
+                horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMicro),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMicro),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    count = state.meta.totalWeeks,
+                    span = { index ->
+                        if (index == state.currentWeekIndex) {
+                            GridItemSpan(7)
+                        } else {
+                            GridItemSpan(1)
+                        }
+                    }
+                ) { weekIdx ->
+                    val isSelected = weekIdx == state.selectedWeekIndex
+                    val isCurrent = weekIdx == state.currentWeekIndex
+
+                    if (isCurrent) {
+                        val itemStroke = if (isSelected) {
+                            BorderStroke(DesignTokens.StrokeExtraThick, MaterialTheme.colorScheme.primary)
+                        } else {
+                            BorderStroke(DesignTokens.StrokeThick, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .aspectRatio(7f)
+                                .clip(RoundedCornerShape(DesignTokens.PaddingZero))
+                                .background(if (isDark) GridLevel0_Dark else Color(0xFFF0F0F0))
+                                .border(itemStroke, RoundedCornerShape(DesignTokens.PaddingZero))
+                                .testTag("week_box_current_active_$weekIdx"),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            for (d in 1..7) {
+                                val dayTasks = state.currentWeekTasks.filter { it.dayOfWeek == d }
+                                val total = dayTasks.size
+                                val dayLevel = if (total == 0) {
+                                    0
+                                } else {
+                                    val completed = dayTasks.count { it.isCompleted == 1 }
+                                    val sr = (completed.toFloat() / total.toFloat()) * 100f
+                                    when {
+                                        sr == 0f -> 0
+                                        sr < 33f -> 1
+                                        sr < 66f -> 2
+                                        sr < 100f -> 3
+                                        else -> 4
+                                    }
+                                }
+
+                                val dayColor = when (dayLevel) {
+                                    0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
+                                    1 -> GridLevel1
+                                    2 -> GridLevel2
+                                    3 -> GridLevel3
+                                    4 -> GridLevel4
+                                    else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
+                                }
+
+                                val isToday = remember(state.meta.inceptionTimestamp, weekIdx, d) {
+                                    Utils.isCellToday(state.meta.inceptionTimestamp, weekIdx, d)
+                                }
+                                val isDaySelected = isSelected && taskDayOfWeek == d
+                                val dayBorder = if (isToday) {
+                                    if (isDaySelected) {
+                                        BorderStroke(DesignTokens.StrokeExtraThick, GridLevel4)
+                                    } else {
+                                        BorderStroke(DesignTokens.StrokeThick, GridLevel4)
+                                    }
+                                } else {
+                                    if (isDaySelected) {
+                                        BorderStroke(DesignTokens.StrokeThick, MaterialTheme.colorScheme.primary)
+                                    } else {
+                                        BorderStroke(DesignTokens.StrokeThin, if (isDark) Color(0xFF333333) else Color(0xFFE0E0E0))
+                                    }
+                                }
+
+                                val absoluteDayOfMonthText = remember(state.meta.inceptionTimestamp, weekIdx, d) {
+                                    val cal = Calendar.getInstance()
+                                    cal.timeInMillis = state.meta.inceptionTimestamp
+                                    cal.add(Calendar.WEEK_OF_YEAR, weekIdx)
+                                    cal.add(Calendar.DAY_OF_YEAR, d - 1)
+                                    cal.get(Calendar.DAY_OF_MONTH).toString()
+                                }
 
                                 Box(
                                     modifier = Modifier
-                                        .background(chipBg)
-                                        .border(BorderStroke(DesignTokens.StrokeMedium, if (isSel) MaterialTheme.colorScheme.primary else chipBorder), RoundedCornerShape(DesignTokens.PaddingZero))
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .background(dayColor)
+                                        .border(dayBorder, RoundedCornerShape(DesignTokens.PaddingZero))
                                         .clickable {
-                                            if (isSel) {
-                                                selectedCategory = null
-                                                selectedRoutine = null
-                                            } else {
-                                                selectedCategory = category
-                                                selectedRoutine = null
-                                            }
+                                            onSelectWeek(weekIdx)
+                                            onSelectDay(d)
                                         }
-                                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
-                                        .testTag("category_chip_${category.name}"),
+                                        .testTag("active_week_day_$d"),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = category.name.uppercase(),
+                                        text = absoluteDayOfMonthText,
                                         style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = DesignTokens.FontSizeTiny,
+                                            fontWeight = if (isDaySelected) FontWeight.Black else FontWeight.Bold,
                                             fontFamily = FontFamily.Monospace,
-                                            fontWeight = FontWeight.Bold,
-                                            color = chipText,
-                                            fontSize = DesignTokens.FontSizeSmall
+                                            color = if (isToday) {
+                                                if (dayLevel == 4) MonochromeBlack else GridLevel4
+                                            } else if (dayLevel > 0) {
+                                                MonochromeWhite
+                                            } else {
+                                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                            }
                                         )
                                     )
                                 }
                             }
                         }
-
-                        if (selectedCategory != null) {
-                            val associatedRoutines = routines.filter { it.categoryId == selectedCategory!!.id }
-                            if (associatedRoutines.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-                                LazyRow(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("routine_chip_row"),
-                                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    items(associatedRoutines) { routine ->
-                                        val isSel = selectedRoutine?.id == routine.id
-                                        val chipBg = if (isSel) GridLevel4 else Color.Transparent
-                                        val chipText = if (isSel) MonochromeBlack else MaterialTheme.colorScheme.primary
-                                        val chipBorder = if (isSel) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-
-                                        Box(
-                                            modifier = Modifier
-                                                .background(chipBg)
-                                                .border(BorderStroke(DesignTokens.StrokeMedium, chipBorder), RoundedCornerShape(DesignTokens.PaddingZero))
-                                                .clickable {
-                                                    if (isSel) {
-                                                        selectedRoutine = null
-                                                    } else {
-                                                        selectedRoutine = routine
-                                                        if (newTaskTitle.isBlank()) {
-                                                            newTaskTitle = routine.title
-                                                        }
-                                                    }
-                                                }
-                                                .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
-                                                .testTag("routine_chip_${routine.title}"),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = routine.title.uppercase(),
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = chipText,
-                                                    fontSize = DesignTokens.FontSizeSmall
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                    } else {
+                        val level = state.weekColors[weekIdx] ?: 0
+                        val cellColor = when (level) {
+                            0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
+                            1 -> GridLevel1
+                            2 -> GridLevel2
+                            3 -> GridLevel3
+                            4 -> GridLevel4
+                            else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
                         }
-                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-                    }
-                }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(DesignTokens.InputHeight)
-                        .border(
-                            DesignTokens.StrokeMedium,
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(DesignTokens.PaddingZero)
-                        )
-                        .background(MaterialTheme.colorScheme.background),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(62.dp)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable {
-                                taskDayOfWeek = if (taskDayOfWeek == 7) 1 else taskDayOfWeek + 1
-                            }
-                            .testTag("day_toggle_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        val itemStroke = if (isSelected) {
+                            BorderStroke(DesignTokens.StrokeExtraThick, MaterialTheme.colorScheme.primary)
+                        } else {
+                            BorderStroke(DesignTokens.StrokeThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(DesignTokens.PaddingZero))
+                                .background(cellColor)
+                                .border(itemStroke, RoundedCornerShape(DesignTokens.PaddingZero))
+                                .clickable {
+                                    onSelectWeek(weekIdx)
+                                }
+                                .testTag("week_box_$weekIdx"),
+                            contentAlignment = Alignment.Center
                         ) {
-                            val currentDayAbbr = remember(state.meta.inceptionTimestamp, state.selectedWeekIndex, taskDayOfWeek) {
-                                val cellTimeInMillis = state.meta.inceptionTimestamp + (state.selectedWeekIndex * 7L + (taskDayOfWeek - 1)) * 24L * 60L * 60L * 1000L
-                                val sdf = SimpleDateFormat("EEE", Locale.getDefault())
-                                sdf.format(Date(cellTimeInMillis)).uppercase()
-                            }
                             Text(
-                                text = currentDayAbbr,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Black,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = DesignTokens.FontSizeMedium
-                                ),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Text(
-                                text = "DAY",
+                                text = (weekIdx + 1).toString(),
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 7.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
+                                    fontSize = DesignTokens.FontSizeMicro,
+                                    fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = if (level > 0) MonochromeWhite 
+                                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                 ),
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                textAlign = TextAlign.Center
                             )
                         }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(DesignTokens.StrokeMedium)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-
-                    TextField(
-                        value = newTaskTitle,
-                        onValueChange = { newTaskTitle = it },
-                        placeholder = {
-                            Text(
-                                text = "_ INPUTTING...",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = DesignTokens.FontSizeMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = DesignTokens.LetterSpacingWide
-                                ),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                            )
-                        },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = MaterialTheme.colorScheme.primary,
-                            unfocusedTextColor = MaterialTheme.colorScheme.primary
-                        ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                val title = newTaskTitle.trim()
-                                if (title.isNotEmpty()) {
-                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek, selectedRoutine?.id)
-                                    newTaskTitle = ""
-                                    selectedCategory = null
-                                    selectedRoutine = null
-                                } else {
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .onFocusChanged { fState -> isInputFocused = fState.isFocused }
-                            .testTag("task_input_field")
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(DesignTokens.InputHeight)
-                            .background(GridLevel4) // Neon green accent!
-                            .clickable {
-                                val title = newTaskTitle.trim()
-                                if (title.isNotEmpty()) {
-                                    onAddTask(title, state.selectedWeekIndex, taskDayOfWeek, selectedRoutine?.id)
-                                    newTaskTitle = ""
-                                    selectedCategory = null
-                                    selectedRoutine = null
-                                }
-                            }
-                            .testTag("add_task_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "+",
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Black,
-                                fontFamily = FontFamily.Monospace
-                            ),
-                            color = MonochromeBlack
-                        )
                     }
                 }
             }
         }
-    }
 
-    if (activeRoutineIdForMilestoneVerification != null) {
-        AlertDialog(
-            onDismissRequest = { activeRoutineIdForMilestoneVerification = null },
-            shape = RoundedCornerShape(DesignTokens.PaddingZero),
-            title = {
-                Text(
-                    text = "[SYSTEM VERIFICATION]",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = DesignTokens.LetterSpacingWide
-                    ),
-                    color = MaterialTheme.colorScheme.primary
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+        // Sub-grid footer zone: Inception dates + Legend Panel
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val yearFormatter = SimpleDateFormat("yyyy", Locale.US)
+            val inceptionYear = yearFormatter.format(Date(state.meta.inceptionTimestamp))
+            val quarter = 1 + (Calendar.getInstance().get(Calendar.MONTH) / 3)
+            Text(
+                text = "INCEPTION: ${inceptionYear}.Q${quarter}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = DesignTokens.FontSizeTiny,
+                    color = Zinc500,
+                    fontWeight = FontWeight.Bold
                 )
-            },
-            text = {
-                Text(
-                    text = "Great job on today's effort! Did this work result in fully achieving the macro milestone (e.g., Article Published), or is it still a work in progress?",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        lineHeight = 20.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            },
-            confirmButton = {
-                Box(
-                    modifier = Modifier
-                        .background(GridLevel4)
-                        .border(DesignTokens.StrokeMedium, MonochromeBlack, RoundedCornerShape(DesignTokens.PaddingZero))
-                        .clickable {
-                            activeRoutineIdForMilestoneVerification?.let { routineId ->
-                                onIncrementRoutineCompletion(routineId)
-                            }
-                            activeRoutineIdForMilestoneVerification = null
-                        }
-                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
-                        .testTag("milestone_achieved_button")
-                ) {
-                    Text(
-                        text = "MILESTONE ACHIEVED!",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Black,
-                            color = MonochromeBlack
-                        )
-                    )
-                }
-            },
-            dismissButton = {
-                Box(
-                    modifier = Modifier
-                        .border(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary, RoundedCornerShape(DesignTokens.PaddingZero))
-                        .clickable {
-                            activeRoutineIdForMilestoneVerification = null
-                        }
-                        .padding(horizontal = DesignTokens.PaddingMedium, vertical = DesignTokens.PaddingSmall)
-                        .testTag("still_in_progress_button")
-                ) {
-                    Text(
-                        text = "STILL IN PROGRESS",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                }
-            }
-        )
+            )
+
+            LegendPanel()
+        }
     }
 }
