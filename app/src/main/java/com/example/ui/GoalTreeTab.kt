@@ -1,10 +1,8 @@
 package com.example.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,16 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,11 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.Category
 import com.example.data.Routine
 import com.example.ui.theme.*
-
-data class NodeBounds(
-    val topCenter: Offset,
-    val bottomCenter: Offset
-)
 
 @Composable
 fun GoalTreeTab(
@@ -53,8 +38,6 @@ fun GoalTreeTab(
     onUpdateRoutine: (String, String, Int) -> Unit,
     onDeleteRoutine: (String) -> Unit
 ) {
-    var viewMode by remember { mutableStateOf(0) } // 0 = List View, 1 = Tree Canvas View
-    
     val isDark = isSystemInDarkTheme()
     val primaryLabelColor = if (isDark) MonochromeWhite else MonochromeBlack
 
@@ -106,649 +89,54 @@ fun GoalTreeTab(
             }
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Brutalist Switcher at the top
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall)
-                        .border(DesignTokens.StrokeMedium, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
+                        .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(if (viewMode == 0) primaryLabelColor else Color.Transparent)
-                            .clickable { viewMode = 0 }
-                            .padding(vertical = 8.dp)
-                            .testTag("toggle_list_view"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "STANDARD LIST",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                color = if (viewMode == 0) (if (isDark) MonochromeBlack else MonochromeWhite) else primaryLabelColor
-                            )
-                        )
-                    }
-
-                    // Divider Line
-                    Box(
-                        modifier = Modifier
-                            .width(DesignTokens.StrokeMedium)
-                            .height(34.dp)
-                            .background(primaryLabelColor)
+                    Text(
+                        text = "ACTIVE CATEGORIES",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Zinc500
                     )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(if (viewMode == 1) primaryLabelColor else Color.Transparent)
-                            .clickable { viewMode = 1 }
-                            .padding(vertical = 8.dp)
-                            .testTag("toggle_canvas_view"),
-                        contentAlignment = Alignment.Center
+                    
+                    TextButton(
+                        onClick = onAddCategoryClick,
+                        modifier = Modifier.testTag("add_category_header_button")
                     ) {
-                        Text(
-                            text = "INTERACTIVE TREE",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                color = if (viewMode == 1) (if (isDark) MonochromeBlack else MonochromeWhite) else primaryLabelColor
-                            )
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Category",
+                            modifier = Modifier.size(14.dp)
                         )
+                        Spacer(modifier = Modifier.width(DesignTokens.PaddingTiny))
+                        Text("ADD CATEGORY", style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
                     }
                 }
 
-                if (viewMode == 0) {
-                    // View 1: List View
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "ACTIVE CATEGORIES",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = Zinc500
-                            )
-                            
-                            TextButton(
-                                onClick = onAddCategoryClick,
-                                modifier = Modifier.testTag("add_category_header_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Category",
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(DesignTokens.PaddingTiny))
-                                Text("ADD CATEGORY", style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
-                            }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = DesignTokens.PaddingLarge),
+                    verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(categories, key = { it.id }) { category ->
+                        val categoryRoutines = remember(routinesByCategory, category.id) {
+                            routinesByCategory[category.id] ?: emptyList()
                         }
-
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = DesignTokens.PaddingLarge),
-                            verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
-                            contentPadding = PaddingValues(bottom = 80.dp)
-                        ) {
-                            items(categories, key = { it.id }) { category ->
-                                val categoryRoutines = remember(routinesByCategory, category.id) {
-                                    routinesByCategory[category.id] ?: emptyList()
-                                }
-                                CategoryCard(
-                                    category = category,
-                                    routines = categoryRoutines,
-                                    onAddRoutineClick = { onAddRoutineClick(category.id) },
-                                    onCategoryClick = { editingCategory = it },
-                                    onRoutineClick = { editingRoutine = it }
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    // View 2: Tree Canvas View with Zoom & Pan and Vector-Pure Scaling
-                    var scale by remember { mutableStateOf(1f) }
-                    var offset by remember { mutableStateOf(Offset.Zero) }
-
-                    val colWidth = 200.dp
-                    val spacing = 32.dp
-
-                    val contentWidth = if (categories.isNotEmpty()) {
-                        (colWidth * categories.size) + (spacing * (categories.size - 1))
-                    } else {
-                        240.dp
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RectangleShape)
-                            .background(MaterialTheme.colorScheme.background)
-                            .pointerInput(Unit) {
-                                detectTransformGestures { _, pan, zoom, _ ->
-                                    scale = (scale * zoom).coerceIn(0.5f, 2.0f)
-                                    offset += pan
-                                }
-                            }
-                    ) {
-                        var parentCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-                        val nodePositions = remember { mutableStateMapOf<String, NodeBounds>() }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .graphicsLayer {
-                                    translationX = offset.x
-                                    translationY = offset.y
-                                    scaleX = scale
-                                    scaleY = scale
-                                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f)
-                                }
-                                .onGloballyPositioned { parentCoordinates = it }
-                        ) {
-                            // Dynamic background Canvas drawing perfect center-to-center connecting lines
-                            Canvas(
-                                modifier = Modifier.matchParentSize()
-                            ) {
-                                val lineColor = primaryLabelColor
-                                val strokeWidthPx = 2.dp.toPx()
-
-                                fun drawConnection(parentKey: String, childKey: String) {
-                                    val parentBounds = nodePositions[parentKey]
-                                    val childBounds = nodePositions[childKey]
-                                    if (parentBounds != null && childBounds != null) {
-                                        drawLine(
-                                            color = lineColor,
-                                            start = parentBounds.bottomCenter,
-                                            end = childBounds.topCenter,
-                                            strokeWidth = strokeWidthPx
-                                        )
-                                    }
-                                }
-
-                                if (categories.isEmpty()) {
-                                    drawConnection("root", "add_category_initial")
-                                } else {
-                                    categories.forEach { category ->
-                                        drawConnection("root", "category_${category.id}")
-
-                                        val categoryRoutines = routinesByCategory[category.id] ?: emptyList()
-                                        if (categoryRoutines.isEmpty()) {
-                                            drawConnection("category_${category.id}", "add_routine_initial_${category.id}")
-                                        } else {
-                                            drawConnection("category_${category.id}", "routine_${categoryRoutines.first().id}")
-                                            for (rIndex in 0 until categoryRoutines.size - 1) {
-                                                val curr = categoryRoutines[rIndex]
-                                                val next = categoryRoutines[rIndex + 1]
-                                                drawConnection("routine_${curr.id}", "routine_${next.id}")
-                                            }
-                                            drawConnection("routine_${categoryRoutines.last().id}", "add_routine_trailing_${category.id}")
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Interactive content layout placed over the background canvas
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(
-                                        top = 180.dp,
-                                        bottom = 300.dp,
-                                        start = 180.dp,
-                                        end = 180.dp
-                                    )
-                                    .requiredWidth(contentWidth),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                // Symmetrical Grand Goal row: Goal Card + spacer + "+" Category Button (if categories exist)
-                                val rootBorderStroke = DesignTokens.StrokeThick
-                                val rootPadding = DesignTokens.PaddingMedium
-                                val rootWidth = 240.dp
-                                val rootHeaderFontSize = 10.sp
-                                val rootTextFontSize = 14.sp
-                                val rootTextSpacer = 4.dp
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = if (categories.isNotEmpty()) Modifier.padding(start = 44.dp) else Modifier // Center-aligned when no plus button
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .border(rootBorderStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .background(MaterialTheme.colorScheme.surface)
-                                            .padding(rootPadding)
-                                            .width(rootWidth)
-                                            .onGloballyPositioned { coordinates ->
-                                                parentCoordinates?.let { parent ->
-                                                    if (coordinates.isAttached && parent.isAttached) {
-                                                        val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                        val size = coordinates.size
-                                                        val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                        val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                        val bounds = NodeBounds(topCenter, bottomCenter)
-                                                        val existing = nodePositions["root"]
-                                                        if (existing == null ||
-                                                            Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                            Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                            Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                            Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                        ) {
-                                                            nodePositions["root"] = bounds
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(
-                                                text = "GRAND GOAL",
-                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Zinc500,
-                                                    fontSize = rootHeaderFontSize
-                                                )
-                                            )
-                                            Spacer(modifier = Modifier.height(rootTextSpacer))
-                                            Text(
-                                                text = grandGoal.uppercase(),
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = primaryLabelColor,
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = rootTextFontSize
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    if (categories.isNotEmpty()) {
-                                        val plusButtonSpacer = 12.dp
-                                        val plusButtonSize = 32.dp
-                                        val plusButtonStroke = DesignTokens.StrokeMedium
-                                        val plusButtonFontSize = 18.sp
-
-                                        Spacer(modifier = Modifier.width(plusButtonSpacer))
-
-                                        // High-contrast "+" button symmetrically to the right of the Grand Goal Card
-                                        Box(
-                                            modifier = Modifier
-                                                .size(plusButtonSize)
-                                                .zIndex(3f)
-                                                .minimumInteractiveComponentSize()
-                                                .border(plusButtonStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                                .background(primaryLabelColor)
-                                                .clickable { onAddCategoryClick() }
-                                                .testTag("canvas_add_category_button"),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "+",
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontWeight = FontWeight.Black,
-                                                    color = if (isDark) MonochromeBlack else MonochromeWhite,
-                                                    fontSize = plusButtonFontSize
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-
-                                if (categories.isEmpty()) {
-                                    val emptyAddCategorySpacer = 32.dp
-                                    val emptyAddCategoryStroke = DesignTokens.StrokeMedium
-                                    val emptyAddCategoryPaddingH = 24.dp
-                                    val emptyAddCategoryPaddingV = 12.dp
-                                    val emptyAddCategoryFontSize = 14.sp
-
-                                    Spacer(modifier = Modifier.height(emptyAddCategorySpacer))
-
-                                    // Prominent, high-contrast text button labeled "[ADD CATEGORY]"
-                                    Box(
-                                        modifier = Modifier
-                                            .zIndex(3f)
-                                            .border(emptyAddCategoryStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                            .background(primaryLabelColor)
-                                            .clickable { onAddCategoryClick() }
-                                            .padding(horizontal = emptyAddCategoryPaddingH, vertical = emptyAddCategoryPaddingV)
-                                            .onGloballyPositioned { coordinates ->
-                                                parentCoordinates?.let { parent ->
-                                                    if (coordinates.isAttached && parent.isAttached) {
-                                                        val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                        val size = coordinates.size
-                                                        val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                        val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                        val bounds = NodeBounds(topCenter, bottomCenter)
-                                                        val existing = nodePositions["add_category_initial"]
-                                                        if (existing == null ||
-                                                            Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                            Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                            Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                            Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                        ) {
-                                                            nodePositions["add_category_initial"] = bounds
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            .testTag("canvas_add_category_initial"),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "[ADD CATEGORY]",
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontWeight = FontWeight.Black,
-                                                color = if (isDark) MonochromeBlack else MonochromeWhite,
-                                                fontSize = emptyAddCategoryFontSize
-                                            )
-                                        )
-                                    }
-                                }
-
-                                val categoryRowSpacer = 64.dp
-                                Spacer(modifier = Modifier.height(categoryRowSpacer))
-
-                                if (categories.isNotEmpty()) {
-                                    // Row of category branches
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(spacing),
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        categories.forEach { category ->
-                                            val categoryRoutines = remember(routinesByCategory, category.id) {
-                                                routinesByCategory[category.id] ?: emptyList()
-                                            }
-
-                                            Column(
-                                                modifier = Modifier.width(colWidth),
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                val categoryBorderStroke = DesignTokens.StrokeMedium
-                                                val categoryPadding = DesignTokens.PaddingMedium
-                                                val categoryHeight = 60.dp
-                                                val categorySpacerHeight = 2.dp
-                                                val categoryTitleFontSize = 9.sp
-                                                val categoryNameFontSize = 14.sp
-
-                                                // Category Card Node
-                                                Box(
-                                                    modifier = Modifier
-                                                        .width(colWidth)
-                                                        .heightIn(min = categoryHeight)
-                                                        .border(categoryBorderStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                                        .background(MaterialTheme.colorScheme.surface)
-                                                        .clickable { editingCategory = category }
-                                                        .padding(categoryPadding)
-                                                        .onGloballyPositioned { coordinates ->
-                                                            parentCoordinates?.let { parent ->
-                                                                if (coordinates.isAttached && parent.isAttached) {
-                                                                    val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                                    val size = coordinates.size
-                                                                    val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                                    val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                                    val bounds = NodeBounds(topCenter, bottomCenter)
-                                                                    val key = "category_${category.id}"
-                                                                    val existing = nodePositions[key]
-                                                                    if (existing == null ||
-                                                                        Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                                        Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                                        Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                                        Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                                    ) {
-                                                                        nodePositions[key] = bounds
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                        Text(
-                                                            text = "SECTOR",
-                                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                                fontFamily = FontFamily.Monospace,
-                                                                fontSize = categoryTitleFontSize,
-                                                                color = Zinc500
-                                                            )
-                                                        )
-                                                        Spacer(modifier = Modifier.height(categorySpacerHeight))
-                                                        Text(
-                                                            text = category.name.uppercase(),
-                                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                                fontFamily = FontFamily.Monospace,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = primaryLabelColor,
-                                                                textAlign = TextAlign.Center,
-                                                                fontSize = categoryNameFontSize
-                                                            ),
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                    }
-                                                }
-
-                                                val categoryToRoutineSpacer = 32.dp
-                                                Spacer(modifier = Modifier.height(categoryToRoutineSpacer))
-
-                                                // Leaf Nodes or Dynamic Add buttons
-                                                if (categoryRoutines.isEmpty()) {
-                                                    val addRoutineStroke = DesignTokens.StrokeMedium
-                                                    val addRoutinePaddingH = 16.dp
-                                                    val addRoutinePaddingV = 8.dp
-                                                    val addRoutineFontSize = 11.sp
-
-                                                    // Category Level Contextual Actions: if NO routines exist
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .zIndex(3f)
-                                                            .minimumInteractiveComponentSize()
-                                                            .border(addRoutineStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                                            .background(primaryLabelColor)
-                                                            .clickable { onAddRoutineClick(category.id) }
-                                                            .padding(horizontal = addRoutinePaddingH, vertical = addRoutinePaddingV)
-                                                            .onGloballyPositioned { coordinates ->
-                                                                parentCoordinates?.let { parent ->
-                                                                    if (coordinates.isAttached && parent.isAttached) {
-                                                                        val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                                        val size = coordinates.size
-                                                                        val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                                        val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                                        val bounds = NodeBounds(topCenter, bottomCenter)
-                                                                        val key = "add_routine_initial_${category.id}"
-                                                                        val existing = nodePositions[key]
-                                                                        if (existing == null ||
-                                                                            Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                                            Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                                            Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                                            Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                                        ) {
-                                                                            nodePositions[key] = bounds
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                            .testTag("canvas_add_routine_initial_${category.id}"),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Text(
-                                                            text = "[ADD ROUTINE]",
-                                                            style = MaterialTheme.typography.labelMedium.copy(
-                                                                fontFamily = FontFamily.Monospace,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = if (isDark) MonochromeBlack else MonochromeWhite,
-                                                                fontSize = addRoutineFontSize
-                                                            )
-                                                        )
-                                                    }
-                                                } else {
-                                                    // If one or more routines exist
-                                                    val spacingBetweenRoutines = 24.dp
-                                                    Column(
-                                                        modifier = Modifier.width(colWidth),
-                                                        verticalArrangement = Arrangement.spacedBy(spacingBetweenRoutines),
-                                                        horizontalAlignment = Alignment.CenterHorizontally
-                                                    ) {
-                                                        categoryRoutines.forEachIndexed { rIndex, routine ->
-                                                            val progress = if (routine.targetCount > 0) {
-                                                                (routine.completedCount.toFloat() / routine.targetCount.toFloat()).coerceIn(0f, 1f)
-                                                            } else {
-                                                                0f
-                                                            }
-
-                                                            val routineStroke = DesignTokens.StrokeThin
-                                                            val routinePadding = DesignTokens.PaddingSmall
-                                                            val routineMinHeight = 50.dp
-                                                            val routineTitleFontSize = 11.sp
-                                                            val routineTextFontSize = 9.sp
-                                                            val routineTextSpacer = 4.dp
-
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .heightIn(min = routineMinHeight)
-                                                                    .border(routineStroke, primaryLabelColor.copy(alpha = 0.5f), RoundedCornerShape(DesignTokens.PaddingZero))
-                                                                    .background(MaterialTheme.colorScheme.surface)
-                                                                    .clickable { editingRoutine = routine }
-                                                                    .padding(routinePadding)
-                                                                    .onGloballyPositioned { coordinates ->
-                                                                        parentCoordinates?.let { parent ->
-                                                                            if (coordinates.isAttached && parent.isAttached) {
-                                                                                val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                                                val size = coordinates.size
-                                                                                val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                                                val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                                                val bounds = NodeBounds(topCenter, bottomCenter)
-                                                                                val key = "routine_${routine.id}"
-                                                                                val existing = nodePositions[key]
-                                                                                if (existing == null ||
-                                                                                    Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                                                    Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                                                    Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                                                    Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                                                ) {
-                                                                                    nodePositions[key] = bounds
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                             ) {
-                                                                Column {
-                                                                    Text(
-                                                                        text = routine.title.uppercase(),
-                                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                                            fontFamily = FontFamily.Monospace,
-                                                                            fontWeight = FontWeight.Bold,
-                                                                            color = primaryLabelColor,
-                                                                            fontSize = routineTitleFontSize
-                                                                        ),
-                                                                        maxLines = 2,
-                                                                        overflow = TextOverflow.Ellipsis
-                                                                    )
-                                                                    Spacer(modifier = Modifier.height(routineTextSpacer))
-                                                                    Row(
-                                                                        modifier = Modifier.fillMaxWidth(),
-                                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                                        verticalAlignment = Alignment.CenterVertically
-                                                                    ) {
-                                                                        Text(
-                                                                            text = "${routine.completedCount}/${routine.targetCount} MO",
-                                                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                                                fontFamily = FontFamily.Monospace,
-                                                                                fontSize = routineTextFontSize,
-                                                                                fontWeight = FontWeight.Bold
-                                                                            ),
-                                                                            color = if (progress >= 1f) GridLevel4 else primaryLabelColor
-                                                                        )
-                                                                    }
-                                                                    Spacer(modifier = Modifier.height(routineTextSpacer))
-                                                                    // Mini progress indicator
-                                                                    val progressHeight = 4.dp
-                                                                    Box(
-                                                                        modifier = Modifier
-                                                                            .fillMaxWidth()
-                                                                            .height(progressHeight)
-                                                                            .background(primaryLabelColor.copy(alpha = 0.1f))
-                                                                    ) {
-                                                                        Box(
-                                                                            modifier = Modifier
-                                                                                .fillMaxHeight()
-                                                                                .fillMaxWidth(progress)
-                                                                                .background(if (progress >= 1f) GridLevel4 else primaryLabelColor)
-                                                                        )
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                        // Routine Level Continuous Actions: Trailing add button
-                                                        val trailingAddSize = 28.dp
-                                                        val trailingAddStroke = DesignTokens.StrokeThin
-                                                        val trailingAddFontSize = 14.sp
-
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .size(trailingAddSize)
-                                                                .zIndex(3f)
-                                                                .minimumInteractiveComponentSize()
-                                                                .border(trailingAddStroke, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero))
-                                                                .background(primaryLabelColor)
-                                                                .clickable { onAddRoutineClick(category.id) }
-                                                                .onGloballyPositioned { coordinates ->
-                                                                    parentCoordinates?.let { parent ->
-                                                                        if (coordinates.isAttached && parent.isAttached) {
-                                                                            val localPos = parent.localPositionOf(coordinates, Offset.Zero)
-                                                                            val size = coordinates.size
-                                                                            val topCenter = Offset(localPos.x + size.width / 2f, localPos.y)
-                                                                            val bottomCenter = Offset(localPos.x + size.width / 2f, localPos.y + size.height)
-                                                                            val bounds = NodeBounds(topCenter, bottomCenter)
-                                                                            val key = "add_routine_trailing_${category.id}"
-                                                                            val existing = nodePositions[key]
-                                                                            if (existing == null ||
-                                                                                Math.abs(existing.topCenter.x - bounds.topCenter.x) > 0.5f ||
-                                                                                Math.abs(existing.topCenter.y - bounds.topCenter.y) > 0.5f ||
-                                                                                Math.abs(existing.bottomCenter.x - bounds.bottomCenter.x) > 0.5f ||
-                                                                                Math.abs(existing.bottomCenter.y - bounds.bottomCenter.y) > 0.5f
-                                                                            ) {
-                                                                                nodePositions[key] = bounds
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                                .testTag("canvas_add_routine_trailing_${category.id}"),
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            Text(
-                                                                text = "+",
-                                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                                    fontFamily = FontFamily.Monospace,
-                                                                    fontWeight = FontWeight.Bold,
-                                                                    color = if (isDark) MonochromeBlack else MonochromeWhite,
-                                                                    fontSize = trailingAddFontSize
-                                                                )
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        CategoryCard(
+                            category = category,
+                            routines = categoryRoutines,
+                            onAddRoutineClick = { onAddRoutineClick(category.id) },
+                            onCategoryClick = { editingCategory = it },
+                            onRoutineClick = { editingRoutine = it }
+                        )
                     }
                 }
             }

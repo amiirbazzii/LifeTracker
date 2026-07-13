@@ -303,7 +303,7 @@ fun DashboardHeaderComponent(
                 text = headerText,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 18.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = DesignTokens.LetterSpacingWide
                 ),
@@ -349,7 +349,8 @@ fun DashboardHeaderComponent(
                         color = GridLevel4,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = -1.sp
+                        letterSpacing = -1.sp,
+                        fontSize = 12.sp
                     )
                 )
                 val level = when {
