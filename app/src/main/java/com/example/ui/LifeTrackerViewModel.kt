@@ -13,6 +13,7 @@ import com.example.data.TimelineMeta
 import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.Reward
+import com.example.data.SubGoal
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +48,57 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    val allSubGoals: StateFlow<List<SubGoal>> = repository.allSubGoals.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun onCreateSubGoal(title: String, durationMonths: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentSubGoals = repository.allSubGoals.first()
+            val nextStartMonth = currentSubGoals.sumOf { it.durationMonths }
+            val subGoal = SubGoal(
+                id = UUID.randomUUID().toString(),
+                title = title,
+                durationMonths = durationMonths,
+                startMonth = nextStartMonth,
+                createdTimestamp = System.currentTimeMillis()
+            )
+            repository.insertSubGoal(subGoal)
+        }
+    }
+
+    fun onUpdateSubGoal(subGoalId: String, newTitle: String, newDurationMonths: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentSubGoals = repository.allSubGoals.first()
+            val existing = currentSubGoals.find { it.id == subGoalId }
+            if (existing != null) {
+                val updated = existing.copy(title = newTitle, durationMonths = newDurationMonths)
+                repository.updateSubGoal(updated)
+                recalculateSubGoalStartMonths()
+            }
+        }
+    }
+
+    fun onDeleteSubGoal(subGoalId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteSubGoal(subGoalId)
+            recalculateSubGoalStartMonths()
+        }
+    }
+
+    private suspend fun recalculateSubGoalStartMonths() {
+        val currentSubGoals = repository.allSubGoals.first()
+        var cumulativeMonth = 0
+        currentSubGoals.forEach { sg ->
+            if (sg.startMonth != cumulativeMonth) {
+                repository.updateSubGoal(sg.copy(startMonth = cumulativeMonth))
+            }
+            cumulativeMonth += sg.durationMonths
+        }
+    }
 
     fun saveUserGoal(goal: String) {
         viewModelScope.launch(Dispatchers.IO) {

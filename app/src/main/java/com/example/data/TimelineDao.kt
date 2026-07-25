@@ -85,4 +85,20 @@ interface TimelineDao {
 
     @Query("DELETE FROM rewards")
     suspend fun clearAllRewards()
+
+    // --- SubGoal Operations ---
+    @Query("SELECT * FROM sub_goals ORDER BY start_month ASC, created_timestamp ASC")
+    fun getAllSubGoals(): Flow<List<SubGoal>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSubGoal(subGoal: SubGoal)
+
+    @Update
+    suspend fun updateSubGoal(subGoal: SubGoal)
+
+    @Query("DELETE FROM sub_goals WHERE sub_goal_id = :subGoalId")
+    suspend fun deleteSubGoal(subGoalId: String)
+
+    @Query("DELETE FROM sub_goals")
+    suspend fun clearAllSubGoals()
 }

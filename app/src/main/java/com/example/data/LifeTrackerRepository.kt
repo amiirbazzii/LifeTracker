@@ -8,6 +8,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
     val allCategories: Flow<List<Category>> = timelineDao.getAllCategories()
     val allRoutines: Flow<List<Routine>> = timelineDao.getAllRoutines()
     val allRewards: Flow<List<Reward>> = timelineDao.getAllRewards()
+    val allSubGoals: Flow<List<SubGoal>> = timelineDao.getAllSubGoals()
 
     fun getTasksForWeek(weekIndex: Int): Flow<List<DailyTask>> {
         return timelineDao.getTasksForWeek(weekIndex)
@@ -23,6 +24,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
         timelineDao.clearAllCategories()
         timelineDao.clearAllRoutines()
         timelineDao.clearAllRewards()
+        timelineDao.clearAllSubGoals()
         timelineDao.insertTimelineMeta(meta)
     }
 
@@ -44,6 +46,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
         timelineDao.clearAllCategories()
         timelineDao.clearAllRoutines()
         timelineDao.clearAllRewards()
+        timelineDao.clearAllSubGoals()
     }
 
     // --- Category CRUD ---
@@ -99,5 +102,22 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
 
     suspend fun clearAllRewards() {
         timelineDao.clearAllRewards()
+    }
+
+    // --- SubGoal CRUD ---
+    suspend fun insertSubGoal(subGoal: SubGoal) {
+        timelineDao.insertSubGoal(subGoal)
+    }
+
+    suspend fun updateSubGoal(subGoal: SubGoal) {
+        timelineDao.updateSubGoal(subGoal)
+    }
+
+    suspend fun deleteSubGoal(subGoalId: String) {
+        timelineDao.deleteSubGoal(subGoalId)
+    }
+
+    suspend fun clearAllSubGoals() {
+        timelineDao.clearAllSubGoals()
     }
 }

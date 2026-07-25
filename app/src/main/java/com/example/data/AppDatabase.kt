@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [TimelineMeta::class, DailyTask::class, Category::class, Routine::class, Reward::class], version = 2, exportSchema = false)
+@Database(entities = [TimelineMeta::class, DailyTask::class, Category::class, Routine::class, Reward::class, SubGoal::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun timelineDao(): TimelineDao
 

@@ -1,6 +1,11 @@
 package com.example.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -42,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.DailyTask
 import com.example.data.Category
 import com.example.data.Routine
+import com.example.data.SubGoal
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -53,6 +59,7 @@ fun DashboardScreen(
     userGoal: String,
     categories: List<Category> = emptyList(),
     routines: List<Routine> = emptyList(),
+    subGoals: List<SubGoal> = emptyList(),
     onEditGoalClick: () -> Unit,
     onSelectWeek: (Int) -> Unit,
     onAddTask: (String, Int, Int, String?) -> Unit,
@@ -70,6 +77,23 @@ fun DashboardScreen(
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var selectedRoutine by remember { mutableStateOf<Routine?>(null) }
     var activeRoutineIdForMilestoneVerification by remember { mutableStateOf<String?>(null) }
+    var revealedGoal by remember { mutableStateOf<SubGoal?>(null) }
+
+    // Helper function to find assigned subgoal for a given week index
+    fun getGoalForWeekIndex(weekIdx: Int): SubGoal? {
+        if (subGoals.isEmpty()) return null
+        val weeksPerMonth = state.meta.totalWeeks.toDouble() / (state.meta.targetYears * 12.0)
+        return subGoals.find { sg ->
+            val startW = (sg.startMonth * weeksPerMonth).toInt()
+            val endW = ((sg.startMonth + sg.durationMonths) * weeksPerMonth).toInt() - 1
+            weekIdx in startW..endW
+        }
+    }
+
+    // Auto update revealedGoal whenever selectedWeekIndex changes
+    LaunchedEffect(state.selectedWeekIndex, subGoals) {
+        revealedGoal = getGoalForWeekIndex(state.selectedWeekIndex)
+    }
 
     LaunchedEffect(state.selectedWeekIndex) {
         if (state.selectedWeekIndex != state.currentWeekIndex) {
@@ -123,10 +147,14 @@ fun DashboardScreen(
     ) {
         // App Goal Banner (Hides completely when input is focused)
         if (!isInputFocused) {
+            val headerLabel = revealedGoal?.let { "Your next ${it.durationMonths} month goal" }
+            val goalTitle = revealedGoal?.title
             BaseSystemHeader(
                 mode = SystemHeaderMode.DASHBOARD,
                 targetYears = state.meta.targetYears,
                 userGoal = userGoal,
+                headerLabelOverride = headerLabel,
+                goalTitleOverride = goalTitle,
                 onEditGoalClick = onEditGoalClick
             )
         }
@@ -145,7 +173,14 @@ fun DashboardScreen(
                 MacroTimelineMatrix(
                     state = state,
                     taskDayOfWeek = taskDayOfWeek,
-                    onSelectWeek = onSelectWeek,
+                    subGoals = subGoals,
+                    onSelectWeek = { weekIdx ->
+                        onSelectWeek(weekIdx)
+                        val assigned = getGoalForWeekIndex(weekIdx)
+                        if (assigned != null) {
+                            revealedGoal = assigned
+                        }
+                    },
                     onSelectDay = { d -> taskDayOfWeek = d }
                 )
             }
@@ -803,6 +838,7 @@ fun MilestoneVerificationDialog(
 fun MacroTimelineMatrix(
     state: LifeTrackerUiState.Dashboard,
     taskDayOfWeek: Int,
+    subGoals: List<SubGoal> = emptyList(),
     onSelectWeek: (Int) -> Unit,
     onSelectDay: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -978,12 +1014,23 @@ fun MacroTimelineMatrix(
                         }
                     } else {
                         val level = state.weekColors[weekIdx] ?: 0
-                        val cellColor = when (level) {
-                            0 -> if (isDark) GridLevel0_Dark else GridLevel0_Light
-                            1 -> GridLevel1
-                            2 -> GridLevel2
-                            3 -> GridLevel3
-                            4 -> GridLevel4
+
+                        val isGoalDeadlineWeek = remember(subGoals, state.meta, weekIdx) {
+                            if (subGoals.isEmpty()) false else {
+                                val weeksPerMonth = 4
+                                subGoals.any { sg ->
+                                    val targetWeekIdx = ((sg.startMonth + sg.durationMonths) * weeksPerMonth) - 1
+                                    weekIdx == targetWeekIdx
+                                }
+                            }
+                        }
+
+                        val cellColor = when {
+                            isGoalDeadlineWeek -> Color(0xFF222222)
+                            level == 1 -> GridLevel1
+                            level == 2 -> GridLevel2
+                            level == 3 -> GridLevel3
+                            level == 4 -> GridLevel4
                             else -> if (isDark) GridLevel0_Dark else GridLevel0_Light
                         }
 
@@ -1009,9 +1056,9 @@ fun MacroTimelineMatrix(
                                 text = (weekIdx + 1).toString(),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = DesignTokens.FontSizeMicro,
-                                    fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
+                                    fontWeight = if (isSelected || isGoalDeadlineWeek) FontWeight.Black else FontWeight.Normal,
                                     fontFamily = FontFamily.Monospace,
-                                    color = if (level > 0) MonochromeWhite 
+                                    color = if (isGoalDeadlineWeek || level > 0) Color(0xFFFFFFFF)
                                             else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                 ),
                                 textAlign = TextAlign.Center

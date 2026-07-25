@@ -84,6 +84,7 @@ fun LifeTrackerApp(
             is LifeTrackerUiState.Dashboard -> {
                 val categories by viewModel.allCategories.collectAsStateWithLifecycle()
                 val routines by viewModel.allRoutines.collectAsStateWithLifecycle()
+                val subGoals by viewModel.allSubGoals.collectAsStateWithLifecycle()
 
                 when (currentScreen) {
                     "goal_input" -> {
@@ -106,18 +107,23 @@ fun LifeTrackerApp(
 
                         GoalHubScreen(
                             grandGoal = userGoal,
+                            targetYears = uiState.meta.targetYears,
                             userPoints = userPoints,
                             categories = categories,
                             routines = routines,
                             rewards = rewards,
+                            subGoals = subGoals,
                             onCreateCategory = { name -> viewModel.onCreateCategory(name) },
                             onCreateRoutine = { catId, title, target -> viewModel.onCreateRoutine(catId, title, target) },
+                            onAddReward = { name, cost -> viewModel.onAddReward(name, cost) },
+                            onClaimReward = { reward -> viewModel.onClaimReward(reward) },
+                            onCreateSubGoal = { title, duration -> viewModel.onCreateSubGoal(title, duration) },
+                            onUpdateSubGoal = { id, title, duration -> viewModel.onUpdateSubGoal(id, title, duration) },
+                            onDeleteSubGoal = { id -> viewModel.onDeleteSubGoal(id) },
                             onUpdateCategory = { id, name -> viewModel.onUpdateCategory(id, name) },
                             onDeleteCategory = { id -> viewModel.onDeleteCategory(id) },
                             onUpdateRoutine = { id, title, target -> viewModel.onUpdateRoutine(id, title, target) },
                             onDeleteRoutine = { id -> viewModel.onDeleteRoutine(id) },
-                            onAddReward = { name, cost -> viewModel.onAddReward(name, cost) },
-                            onClaimReward = { reward -> viewModel.onClaimReward(reward) },
                             onEditGrandGoal = { currentScreen = "goal_input" },
                             onBack = { currentScreen = "dashboard" },
                             onSaveGrandGoal = { newGoal -> viewModel.saveUserGoal(newGoal) },
@@ -133,6 +139,7 @@ fun LifeTrackerApp(
                             userGoal = userGoal,
                             categories = categories,
                             routines = routines,
+                            subGoals = subGoals,
                             onEditGoalClick = { currentScreen = "goal_hub" },
                             onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
                             onAddTask = { title, weekIndex, day, routineId -> viewModel.addTask(title, weekIndex, day, routineId) },

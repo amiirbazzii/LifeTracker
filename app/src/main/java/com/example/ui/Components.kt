@@ -1,5 +1,10 @@
 package com.example.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -56,6 +61,8 @@ fun BaseSystemHeader(
     mode: SystemHeaderMode,
     targetYears: Int = 5,
     userGoal: String = "",
+    headerLabelOverride: String? = null,
+    goalTitleOverride: String? = null,
     onEditGoalClick: () -> Unit = {},
     activeSectionTitle: String = "",
     userPoints: Int = 0,
@@ -84,46 +91,56 @@ fun BaseSystemHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (mode == SystemHeaderMode.DASHBOARD) {
-                Column(
+                val currentHeaderLabel = headerLabelOverride ?: "YOUR NEXT $targetYears YEAR GOAL"
+                val currentGoalTitle = goalTitleOverride ?: userGoal
+
+                AnimatedContent(
+                    targetState = Pair(currentHeaderLabel, currentGoalTitle),
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                    },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = DesignTokens.PaddingLarge)
-                ) {
-                    Text(
-                        text = "YOUR NEXT $targetYears YEAR GOAL",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = descriptorColor,
-                            fontSize = 12.sp,
-                            letterSpacing = DesignTokens.LetterSpacingExtraWide,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    val goalTextToShow = if (userGoal.isBlank()) {
-                        "> TAP TO SET AN EXECUTION GOAL"
-                    } else {
-                        userGoal.uppercase()
+                        .padding(end = DesignTokens.PaddingLarge),
+                    label = "GoalHeaderAnimation"
+                ) { (label, title) ->
+                    Column {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = descriptorColor,
+                                fontSize = 12.sp,
+                                letterSpacing = DesignTokens.LetterSpacingExtraWide,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                        val goalTextToShow = if (title.isBlank()) {
+                            "> TAP TO SET AN EXECUTION GOAL"
+                        } else {
+                            title
+                        }
+                        Text(
+                            text = goalTextToShow,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 18.sp,
+                                letterSpacing = DesignTokens.LetterSpacingWide,
+                                color = if (title.isBlank()) GridLevel4 else primaryLabelColor
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .basicMarquee(
+                                    iterations = Int.MAX_VALUE,
+                                    initialDelayMillis = 1000,
+                                    velocity = 20.dp
+                                )
+                        )
                     }
-                    Text(
-                        text = goalTextToShow,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 18.sp,
-                            letterSpacing = DesignTokens.LetterSpacingWide,
-                            color = if (userGoal.isBlank()) GridLevel4 else primaryLabelColor
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                initialDelayMillis = 1000,
-                                velocity = 20.dp
-                            )
-                    )
                 }
 
                 Box(

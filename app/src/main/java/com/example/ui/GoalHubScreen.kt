@@ -14,20 +14,26 @@ import androidx.compose.ui.unit.dp
 import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.Reward
+import com.example.data.SubGoal
 import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalHubScreen(
     grandGoal: String,
+    targetYears: Int = 25,
     userPoints: Int,
     categories: List<Category>,
     routines: List<Routine>,
     rewards: List<Reward>,
+    subGoals: List<SubGoal> = emptyList(),
     onCreateCategory: (String) -> Unit,
     onCreateRoutine: (String, String, Int) -> Unit,
     onAddReward: (String, Int) -> Unit,
     onClaimReward: (Reward) -> Unit,
+    onCreateSubGoal: (String, Int) -> Unit = { _, _ -> },
+    onUpdateSubGoal: (String, String, Int) -> Unit = { _, _, _ -> },
+    onDeleteSubGoal: (String) -> Unit = {},
     onUpdateCategory: (String, String) -> Unit = { _, _ -> },
     onDeleteCategory: (String) -> Unit = {},
     onUpdateRoutine: (String, String, Int) -> Unit = { _, _, _ -> },
@@ -110,7 +116,12 @@ fun GoalHubScreen(
                 2 -> {
                     ObjectiveTab(
                         currentGoal = grandGoal,
-                        onSaveGoal = onSaveGrandGoal
+                        targetYears = targetYears,
+                        subGoals = subGoals,
+                        onSaveGoal = onSaveGrandGoal,
+                        onCreateSubGoal = onCreateSubGoal,
+                        onUpdateSubGoal = onUpdateSubGoal,
+                        onDeleteSubGoal = onDeleteSubGoal
                     )
                 }
                 3 -> {
