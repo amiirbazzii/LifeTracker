@@ -1,5 +1,6 @@
 package com.example.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +44,10 @@ fun GoalHubScreen(
     onSaveGrandGoal: (String) -> Unit = {},
     onReset: () -> Unit = {}
 ) {
+    BackHandler {
+        onBack()
+    }
+
     var selectedTab by remember { mutableStateOf(0) }
     
     // Dialog states

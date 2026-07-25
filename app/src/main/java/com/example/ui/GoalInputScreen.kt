@@ -1,5 +1,6 @@
 package com.example.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +28,10 @@ fun GoalInputScreen(
     onBack: () -> Unit,
     onReset: () -> Unit
 ) {
+    BackHandler {
+        onBack()
+    }
+
     var goalText by remember { mutableStateOf(currentGoal) }
 
     Column(
