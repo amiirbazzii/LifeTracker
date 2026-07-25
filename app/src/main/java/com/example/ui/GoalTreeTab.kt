@@ -59,7 +59,7 @@ fun GoalTreeTab(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "NO LIFE SECTORS DETECTED",
+                    text = "NO CATEGORIES CREATED",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -69,7 +69,7 @@ fun GoalTreeTab(
                 )
                 Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
                 Text(
-                    text = "Partition your 25-year goal into actionable categories (sectors) to begin tracking your routines.",
+                    text = "Add categories to organize your routines and track progress.",
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     color = Zinc500,
                     textAlign = TextAlign.Center
@@ -84,7 +84,7 @@ fun GoalTreeTab(
                     ),
                     modifier = Modifier.testTag("add_category_button_empty")
                 ) {
-                    Text("INITIALIZE SECTOR", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text("ADD CATEGORY", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
             }
         } else {
@@ -160,7 +160,7 @@ fun GoalTreeTab(
                     .border(DesignTokens.StrokeThick, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero)),
                 title = {
                     Text(
-                        text = "CONFIGURE SECTOR",
+                        text = "EDIT CATEGORY",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -171,7 +171,7 @@ fun GoalTreeTab(
                 text = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Modify the Sector identification moniker or decommission it entirely from the framework profile.",
+                            text = "Update the category name or delete it.",
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                             color = Zinc500
                         )
@@ -184,7 +184,7 @@ fun GoalTreeTab(
                                 .fillMaxWidth()
                                 .testTag("edit_category_name_input"),
                             shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                            placeholder = { Text("e.g., SOFT SKILLS", fontFamily = FontFamily.Monospace) },
+                            placeholder = { Text("e.g., Soft Skills", fontFamily = FontFamily.Monospace) },
                             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -212,7 +212,7 @@ fun GoalTreeTab(
                                 .testTag("delete_category_trigger")
                         ) {
                             Text(
-                                "DELETE SECTOR & NESTED ROUTINES",
+                                "DELETE CATEGORY & ROUTINES",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold
@@ -236,14 +236,14 @@ fun GoalTreeTab(
                         ),
                         modifier = Modifier.testTag("save_category_changes")
                     ) {
-                        Text("SAVE CHANGES", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { editingCategory = null }
                     ) {
-                        Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                     }
                 }
             )
@@ -255,7 +255,7 @@ fun GoalTreeTab(
                 modifier = Modifier.border(DesignTokens.StrokeThick, Color.Red, RoundedCornerShape(DesignTokens.PaddingZero)),
                 title = {
                     Text(
-                        text = "DECOMMISSION WARNING",
+                        text = "DELETE CATEGORY?",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -265,7 +265,7 @@ fun GoalTreeTab(
                 },
                 text = {
                     Text(
-                        text = "Are you absolutely sure you want to delete Sector '${category.name.uppercase()}'? This action is irreversible and will permanently delete all associated monthly routines.",
+                        text = "Are you sure you want to delete category '${category.name.uppercase()}'? This will permanently delete all associated routines.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = primaryLabelColor
                     )
@@ -284,14 +284,14 @@ fun GoalTreeTab(
                         ),
                         modifier = Modifier.testTag("confirm_delete_category")
                     ) {
-                        Text("CONFIRM DELETION", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("DELETE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { showConfirmDelete = false }
                     ) {
-                        Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                     }
                 }
             )
@@ -315,7 +315,7 @@ fun GoalTreeTab(
                     .border(DesignTokens.StrokeThick, primaryLabelColor, RoundedCornerShape(DesignTokens.PaddingZero)),
                 title = {
                     Text(
-                        text = "CONFIGURE ROUTINE",
+                        text = "EDIT ROUTINE",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -326,7 +326,7 @@ fun GoalTreeTab(
                 text = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Modify core routine description details and target monthly threshold directly.",
+                            text = "Update the routine title and target monthly count.",
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                             color = Zinc500
                         )
@@ -421,14 +421,14 @@ fun GoalTreeTab(
                         ),
                         modifier = Modifier.testTag("save_routine_changes")
                     ) {
-                        Text("SAVE CHANGES", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { editingRoutine = null }
                     ) {
-                        Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                     }
                 }
             )
@@ -440,7 +440,7 @@ fun GoalTreeTab(
                 modifier = Modifier.border(DesignTokens.StrokeThick, Color.Red, RoundedCornerShape(DesignTokens.PaddingZero)),
                 title = {
                     Text(
-                        text = "DELETION WARNING",
+                        text = "DELETE ROUTINE?",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -450,7 +450,7 @@ fun GoalTreeTab(
                 },
                 text = {
                     Text(
-                        text = "Are you absolutely sure you want to delete Routine '${routine.title.uppercase()}'? This action is irreversible.",
+                        text = "Are you sure you want to delete routine '${routine.title.uppercase()}'?",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = primaryLabelColor
                     )
@@ -469,14 +469,14 @@ fun GoalTreeTab(
                         ),
                         modifier = Modifier.testTag("confirm_delete_routine")
                     ) {
-                        Text("CONFIRM DELETION", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("DELETE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { showConfirmDelete = false }
                     ) {
-                        Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                     }
                 }
             )
@@ -559,7 +559,7 @@ fun CategoryCard(
 
             if (routines.isEmpty()) {
                 Text(
-                    text = "NO ROUTINES REGISTERED IN THIS SECTOR.",
+                    text = "NO ROUTINES IN THIS CATEGORY.",
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
                     color = Zinc500,
                     modifier = Modifier.padding(vertical = DesignTokens.PaddingSmall)

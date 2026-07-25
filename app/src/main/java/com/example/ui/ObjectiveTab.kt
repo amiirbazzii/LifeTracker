@@ -58,7 +58,7 @@ fun ObjectiveTab(
     ) {
         // --- 1. HEADER SECTION ---
         Text(
-            text = "GOAL TREE OBJECTIVE PROTOCOL",
+            text = "GOAL OBJECTIVES",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontFamily = FontFamily.Monospace,
                 color = Zinc500,
@@ -86,7 +86,7 @@ fun ObjectiveTab(
             ) {
                 Column {
                     Text(
-                        text = "[EMPTY STATE] NO MAIN OBJECTIVE SET",
+                        text = "NO MAIN GOAL SET",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Black,
@@ -95,7 +95,7 @@ fun ObjectiveTab(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
                     Text(
-                        text = "Please enter your main $targetYears-year goal to initialize the root node of your Goal Tree before assigning sub-goals.",
+                        text = "Enter your main $targetYears-year goal to get started with assigning sub-goals.",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             color = Zinc500,
@@ -109,7 +109,7 @@ fun ObjectiveTab(
                         onValueChange = { mainGoalInput = it },
                         placeholder = {
                             Text(
-                                text = "e.g., MASTER FULL-STACK ANDROID & AI DEVELOPMENT",
+                                text = "e.g., Master Android & Mobile Development",
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = Zinc500,
                                     fontFamily = FontFamily.Monospace
@@ -147,7 +147,7 @@ fun ObjectiveTab(
                         )
                     ) {
                         Text(
-                            text = "INITIALIZE ROOT OBJECTIVE",
+                            text = "SAVE MAIN GOAL",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Black,
                                 fontFamily = FontFamily.Monospace,
@@ -179,7 +179,7 @@ fun ObjectiveTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "ROOT GOAL NODE (MAIN OBJECTIVE)",
+                            text = "MAIN GOAL",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Black,
@@ -193,7 +193,7 @@ fun ObjectiveTab(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "TAP TO EDIT",
+                                text = "EDIT",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Black,
@@ -224,7 +224,7 @@ fun ObjectiveTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "TIME HORIZON: $targetYears YEARS ($totalMonthLimit MONTHS)",
+                            text = "$targetYears-YEAR TIMELINE ($totalMonthLimit MONTHS)",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
@@ -273,7 +273,7 @@ fun ObjectiveTab(
             ) {
                 Column {
                     Text(
-                        text = "CREATE SUB-GOAL BRANCH",
+                        text = "ADD SUB-GOAL",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -295,7 +295,7 @@ fun ObjectiveTab(
                             Text("Goal Title", fontFamily = FontFamily.Monospace)
                         },
                         placeholder = {
-                            Text("e.g., Master Jetpack Compose & Clean Architecture", fontFamily = FontFamily.Monospace, color = Zinc500)
+                            Text("e.g., Learn Jetpack Compose", fontFamily = FontFamily.Monospace, color = Zinc500)
                         },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = FontFamily.Monospace,
@@ -318,7 +318,7 @@ fun ObjectiveTab(
                             formErrorMessage = null
                         },
                         label = {
-                            Text("Duration (in months)", fontFamily = FontFamily.Monospace)
+                            Text("Duration in months", fontFamily = FontFamily.Monospace)
                         },
                         placeholder = {
                             Text("e.g., 6 (max $totalMonthLimit)", fontFamily = FontFamily.Monospace, color = Zinc500)
@@ -387,7 +387,7 @@ fun ObjectiveTab(
                             )
                             Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
                             Text(
-                                text = "COMMIT SUB-GOAL TO TREE",
+                                text = "ADD SUB-GOAL",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace
@@ -402,7 +402,7 @@ fun ObjectiveTab(
 
             // --- 4. GOAL TREE BRANCH NODES LIST ---
             Text(
-                text = "GOAL TREE BRANCHES (${subGoals.size})",
+                text = "SUB-GOALS (${subGoals.size})",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Monospace,
                     color = Zinc500,
@@ -426,7 +426,7 @@ fun ObjectiveTab(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "NO SUB-GOALS CREATED YET",
+                        text = "NO SUB-GOALS YET",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             color = Zinc500
@@ -532,7 +532,7 @@ fun ObjectiveTab(
             shape = RoundedCornerShape(DesignTokens.PaddingZero),
             title = {
                 Text(
-                    text = "RECONFIGURE ROOT GOAL",
+                    text = "EDIT MAIN GOAL",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -542,7 +542,7 @@ fun ObjectiveTab(
             text = {
                 Column {
                     Text(
-                        text = "Modify your core 25-Year Objective statement.",
+                        text = "Update your main $targetYears-year goal.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500
                     )
@@ -568,12 +568,12 @@ fun ObjectiveTab(
                     },
                     modifier = Modifier.testTag("save_main_goal_button")
                 ) {
-                    Text("SAVE CHANGES", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEditMainGoalDialog = false }) {
-                    Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }
         )
@@ -590,7 +590,7 @@ fun ObjectiveTab(
             shape = RoundedCornerShape(DesignTokens.PaddingZero),
             title = {
                 Text(
-                    text = "EDIT SUB-GOAL ITEM",
+                    text = "EDIT SUB-GOAL",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -600,7 +600,7 @@ fun ObjectiveTab(
             text = {
                 Column {
                     Text(
-                        text = "Update or delete this goal tree node.",
+                        text = "Update or delete this sub-goal.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500
                     )
@@ -628,7 +628,7 @@ fun ObjectiveTab(
                             editDuration = it
                             dialogErrorMsg = null
                         },
-                        label = { Text("Duration (months)", fontFamily = FontFamily.Monospace) },
+                        label = { Text("Duration in months", fontFamily = FontFamily.Monospace) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -681,13 +681,13 @@ fun ObjectiveTab(
                         },
                         modifier = Modifier.testTag("update_sub_goal_button")
                     ) {
-                        Text("UPDATE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingSubGoal = null }) {
-                    Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }
         )

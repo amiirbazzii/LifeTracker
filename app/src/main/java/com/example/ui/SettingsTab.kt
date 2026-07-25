@@ -36,7 +36,7 @@ fun SettingsTab(
         verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium)
     ) {
         Text(
-            text = "SYSTEM CONFIG & TELEMETRY",
+            text = "APP SUMMARY & METRICS",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontFamily = FontFamily.Monospace,
                 color = Zinc500,
@@ -48,17 +48,17 @@ fun SettingsTab(
         Column(
             verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall)
         ) {
-            MetricRow(label = "TOTAL POINT BALANCE", value = "$userPoints PTS")
-            MetricRow(label = "ACTIVE SUB-GOAL CATEGORIES", value = categoriesCount.toString())
-            MetricRow(label = "RECURRING ROUTINES TRACKED", value = routinesCount.toString())
-            MetricRow(label = "CUSTOM REWARDS LISTED", value = rewardsCount.toString())
-            MetricRow(label = "DATABASE ENCRYPTION", value = "SQLITE.LOCAL")
+            MetricRow(label = "TOTAL POINTS", value = "$userPoints PTS")
+            MetricRow(label = "ACTIVE CATEGORIES", value = categoriesCount.toString())
+            MetricRow(label = "ROUTINES TRACKED", value = routinesCount.toString())
+            MetricRow(label = "REWARDS CREATED", value = rewardsCount.toString())
+            MetricRow(label = "DATA STORAGE", value = "LOCAL DB")
         }
 
         Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
 
         Text(
-            text = "SYSTEM OPERATIONS",
+            text = "DATA MANAGEMENT",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontFamily = FontFamily.Monospace,
                 color = Zinc500,
@@ -83,7 +83,7 @@ fun SettingsTab(
             border = BorderStroke(DesignTokens.StrokeThick, Color.Red.copy(alpha = 0.5f))
         ) {
             Text(
-                text = "RESET ALL PROFILE SYSTEMS",
+                text = "RESET ALL APP DATA",
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,

@@ -58,10 +58,10 @@ fun GoalHubScreen(
     var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     val activeSectionTitle = when (selectedTab) {
-        0 -> "GOAL TREE"
-        1 -> "REWARD HUB"
-        2 -> "GOAL OBJECTIVE"
-        else -> "SYSTEM SETTINGS"
+        0 -> "CATEGORIES"
+        1 -> "REWARDS"
+        2 -> "OBJECTIVES"
+        else -> "SETTINGS"
     }
 
     Scaffold(
@@ -152,7 +152,7 @@ fun GoalHubScreen(
             shape = RoundedCornerShape(DesignTokens.PaddingZero),
             title = {
                 Text(
-                    text = "INITIALIZE CATEGORY",
+                    text = "ADD CATEGORY",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -162,7 +162,7 @@ fun GoalHubScreen(
             text = {
                 Column {
                     Text(
-                        text = "Enter category identifier to partition your sub-goals.",
+                        text = "Enter a category name to organize your sub-goals.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500
                     )
@@ -174,7 +174,7 @@ fun GoalHubScreen(
                             .fillMaxWidth()
                             .testTag("category_name_input"),
                         shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                        placeholder = { Text("e.g., SOFT SKILLS", fontFamily = FontFamily.Monospace) },
+                        placeholder = { Text("e.g., Soft Skills", fontFamily = FontFamily.Monospace) },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                         singleLine = true
                     )
@@ -190,12 +190,12 @@ fun GoalHubScreen(
                     },
                     modifier = Modifier.testTag("add_category_button")
                 ) {
-                    Text("COMMIT", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCategoryDialog = false }) {
-                    Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }
         )
@@ -212,7 +212,7 @@ fun GoalHubScreen(
             shape = RoundedCornerShape(DesignTokens.PaddingZero),
             title = {
                 Text(
-                    text = "ADD RECURRING ROUTINE",
+                    text = "ADD ROUTINE",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -222,7 +222,7 @@ fun GoalHubScreen(
             text = {
                 Column {
                     Text(
-                        text = "Define recurring action item & target frequency per month.",
+                        text = "Set a routine title and target monthly count.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500
                     )
@@ -277,12 +277,12 @@ fun GoalHubScreen(
                     },
                     modifier = Modifier.testTag("save_routine_button")
                 ) {
-                    Text("COMMIT", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRoutineDialog = false }) {
-                    Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }
         )
@@ -299,7 +299,7 @@ fun GoalHubScreen(
             shape = RoundedCornerShape(DesignTokens.PaddingZero),
             title = {
                 Text(
-                    text = "DEFINE CUSTOM REWARD",
+                    text = "ADD REWARD",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -309,7 +309,7 @@ fun GoalHubScreen(
             text = {
                 Column {
                     Text(
-                        text = "Specify incentive naming and corresponding gamification point cost.",
+                        text = "Enter a reward title and required points.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500
                     )
@@ -364,12 +364,12 @@ fun GoalHubScreen(
                     },
                     modifier = Modifier.testTag("save_reward_button")
                 ) {
-                    Text("COMMIT", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text("SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRewardDialog = false }) {
-                    Text("ABORT", fontFamily = FontFamily.Monospace, color = Zinc500)
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }
         )

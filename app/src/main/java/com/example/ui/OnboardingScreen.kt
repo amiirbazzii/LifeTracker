@@ -200,7 +200,7 @@ fun OnboardingScreen(
                 Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
 
                 Text(
-                    text = "THE MATRIX EXECUTION GOAL",
+                    text = "MAIN GOAL (OPTIONAL)",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = DesignTokens.LetterSpacingWide,

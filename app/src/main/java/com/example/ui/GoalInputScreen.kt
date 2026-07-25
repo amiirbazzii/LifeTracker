@@ -179,7 +179,7 @@ fun GoalInputScreen(
             border = BorderStroke(DesignTokens.StrokeMedium, Color.Red.copy(alpha = 0.5f))
         ) {
             Text(
-                text = "RESET ALL PROTOCOLS",
+                text = "RESET ALL DATA",
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,

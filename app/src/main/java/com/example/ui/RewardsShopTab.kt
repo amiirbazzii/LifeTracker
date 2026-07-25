@@ -40,7 +40,7 @@ fun RewardsShopTab(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "REWARD CATALOG",
+                    text = "REWARDS",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -71,7 +71,7 @@ fun RewardsShopTab(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "CATALOG EMPTY",
+                        text = "NO REWARDS YET",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
@@ -81,7 +81,7 @@ fun RewardsShopTab(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
                     Text(
-                        text = "Invent incentives (gaming sessions, premium snacks, breaks) and assign point costs to drive effort.",
+                        text = "Create custom rewards with point costs to motivate your progress.",
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = Zinc500,
                         textAlign = TextAlign.Center
@@ -96,7 +96,7 @@ fun RewardsShopTab(
                         ),
                         modifier = Modifier.testTag("add_reward_button_empty")
                     ) {
-                        Text("INITIALIZE REWARD", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text("ADD REWARD", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
@@ -158,7 +158,7 @@ fun RewardCard(
                 )
                 Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
                 Text(
-                    text = "COST: ${reward.pointCost} PTS // CLAIMED: ${reward.claimedCount} TIMES",
+                    text = "COST: ${reward.pointCost} PTS  •  CLAIMED: ${reward.claimedCount}",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         color = if (isAchieved) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) else Zinc500
