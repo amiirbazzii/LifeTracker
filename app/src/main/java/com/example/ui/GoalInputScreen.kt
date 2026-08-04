@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -33,11 +35,13 @@ fun GoalInputScreen(
     }
 
     var goalText by remember { mutableStateOf(currentGoal) }
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(scrollState)
             .padding(DesignTokens.PaddingExtraLarge)
     ) {
         // Goal page header
@@ -161,7 +165,7 @@ fun GoalInputScreen(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(DesignTokens.PaddingDoubleExtraLarge))
 
         var showResetAlert by remember { mutableStateOf(false) }
 

@@ -1,26 +1,25 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
     <!-- Top-Left Square (Level 1: Darkest Green) -->
     <path
         android:fillColor="#0A2A0A"
-        android:pathData="M31,31h21v21h-21z" />
+        android:pathData="M2,2h20v20h-20z" />
 
     <!-- Top-Right Square (Level 2: Dark-Medium Green) -->
     <path
         android:fillColor="#0E640E"
-        android:pathData="M56,31h21v21h-21z" />
+        android:pathData="M26,2h20v20h-20z" />
 
     <!-- Bottom-Left Square (Level 3: Medium-Vibrant Green) -->
     <path
         android:fillColor="#00A800"
-        android:pathData="M31,56h21v21h-21z" />
+        android:pathData="M2,26h20v20h-20z" />
 
     <!-- Bottom-Right Square (Level 4: Bright Neon Green) -->
     <path
         android:fillColor="#00FF00"
-        android:pathData="M56,56h21v21h-21z" />
+        android:pathData="M26,26h20v20h-20z" />
 </vector>
-
