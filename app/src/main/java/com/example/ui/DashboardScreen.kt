@@ -118,13 +118,16 @@ fun DashboardScreen(
         focusManager.clearFocus()
     }
 
+    val hasGoal = userGoal.trim().isNotBlank()
+    val showMatrix = hasGoal && !isInputFocused
+
     val topHalfHeight by animateDpAsState(
-        targetValue = if (isInputFocused) DesignTokens.PaddingZero else 215.dp,
+        targetValue = if (showMatrix) 215.dp else DesignTokens.PaddingZero,
         animationSpec = tween(durationMillis = 400),
         label = "topHalfHeight"
     )
     val topHalfAlpha by animateFloatAsState(
-        targetValue = if (isInputFocused) 0f else 1f,
+        targetValue = if (showMatrix) 1f else 0f,
         animationSpec = tween(durationMillis = 300),
         label = "topHalfAlpha"
     )
@@ -134,7 +137,7 @@ fun DashboardScreen(
         label = "spacerHeightTop"
     )
     val spacerHeightBot by animateDpAsState(
-        targetValue = if (isInputFocused) DesignTokens.PaddingZero else DesignTokens.PaddingSmall,
+        targetValue = if (showMatrix) DesignTokens.PaddingSmall else DesignTokens.PaddingZero,
         animationSpec = tween(durationMillis = 400),
         label = "spacerHeightBot"
     )
@@ -159,36 +162,40 @@ fun DashboardScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(spacerHeightTop))
+        if (hasGoal) {
+            Spacer(modifier = Modifier.height(spacerHeightTop))
 
-        // Macro Timeline Matrix Block
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(topHalfHeight)
-                .alpha(topHalfAlpha)
-                .clip(RoundedCornerShape(DesignTokens.PaddingZero))
-        ) {
-            if (topHalfHeight > 24.dp) {
-                MacroTimelineMatrix(
-                    state = state,
-                    taskDayOfWeek = taskDayOfWeek,
-                    subGoals = subGoals,
-                    onSelectWeek = { weekIdx ->
-                        onSelectWeek(weekIdx)
-                        val assigned = getGoalForWeekIndex(weekIdx)
-                        if (assigned != null) {
-                            revealedGoal = assigned
-                        }
-                    },
-                    onSelectDay = { d -> taskDayOfWeek = d }
-                )
+            // Macro Timeline Matrix Block
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(topHalfHeight)
+                    .alpha(topHalfAlpha)
+                    .clip(RoundedCornerShape(DesignTokens.PaddingZero))
+            ) {
+                if (topHalfHeight > 24.dp) {
+                    MacroTimelineMatrix(
+                        state = state,
+                        taskDayOfWeek = taskDayOfWeek,
+                        subGoals = subGoals,
+                        onSelectWeek = { weekIdx ->
+                            onSelectWeek(weekIdx)
+                            val assigned = getGoalForWeekIndex(weekIdx)
+                            if (assigned != null) {
+                                revealedGoal = assigned
+                            }
+                        },
+                        onSelectDay = { d -> taskDayOfWeek = d }
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(spacerHeightBot))
-        HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f * topHalfAlpha), thickness = DesignTokens.DividerThickness)
-        Spacer(modifier = Modifier.height(spacerHeightBot))
+            Spacer(modifier = Modifier.height(spacerHeightBot))
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f * topHalfAlpha), thickness = DesignTokens.DividerThickness)
+            Spacer(modifier = Modifier.height(spacerHeightBot))
+        } else {
+            Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+        }
 
         // --- MICRO PERSISTENT TASK MANAGER (BOTTOM HALF) ---
         Column(
@@ -199,8 +206,16 @@ fun DashboardScreen(
             val filteredTasks = remember(state.selectedWeekTasks, taskDayOfWeek) {
                 state.selectedWeekTasks.filter { it.dayOfWeek == taskDayOfWeek }
             }
-            val completedCount = filteredTasks.count { it.isCompleted == 1 }
-            val totalCount = filteredTasks.size
+            val completedCount = if (isHistorical) {
+                state.selectedWeekTasks.count { it.isCompleted == 1 }
+            } else {
+                filteredTasks.count { it.isCompleted == 1 }
+            }
+            val totalCount = if (isHistorical) {
+                state.selectedWeekTasks.size
+            } else {
+                filteredTasks.size
+            }
             val completionRate = if (totalCount == 0) 0 else (completedCount * 100 / totalCount)
 
             // 1. DashboardHeaderComponent
@@ -224,7 +239,9 @@ fun DashboardScreen(
             // 4. TaskListSectionComponent
             TaskListSectionComponent(
                 filteredTasks = filteredTasks,
+                allWeekTasks = state.selectedWeekTasks,
                 isHistorical = isHistorical,
+                selectedWeekIndex = state.selectedWeekIndex,
                 inceptionTimestamp = state.meta.inceptionTimestamp,
                 categories = categories,
                 routines = routines,
@@ -688,9 +705,63 @@ fun ContextualChipsComponent(
 }
 
 @Composable
+fun DayDateSectionHeader(
+    dateLabel: String,
+    completedCount: Int,
+    totalCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val isDark = isSystemInDarkTheme()
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(if (isDark) Color(0xFF141414) else Color(0xFFEEEEEE))
+            .border(
+                BorderStroke(DesignTokens.StrokeThin, if (isDark) Zinc800 else Color(0xFFD0D0D0)),
+                RoundedCornerShape(DesignTokens.PaddingZero)
+            )
+            .padding(horizontal = DesignTokens.PaddingMedium, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(GridLevel4)
+            )
+            Text(
+                text = dateLabel.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = DesignTokens.LetterSpacingWide,
+                    fontSize = 11.sp
+                ),
+                color = if (isDark) MonochromeWhite else MonochromeBlack
+            )
+        }
+        Text(
+            text = "$completedCount/$totalCount DONE",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp,
+                color = if (completedCount == totalCount && totalCount > 0) GridLevel4 else Zinc500
+            )
+        )
+    }
+}
+
+@Composable
 fun TaskListSectionComponent(
     filteredTasks: List<DailyTask>,
+    allWeekTasks: List<DailyTask>,
     isHistorical: Boolean,
+    selectedWeekIndex: Int,
     inceptionTimestamp: Long,
     categories: List<Category>,
     routines: List<Routine>,
@@ -701,26 +772,76 @@ fun TaskListSectionComponent(
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
-        if (filteredTasks.isEmpty()) {
-            EmptyStatePanel(isHistorical = isHistorical)
+        if (isHistorical) {
+            if (allWeekTasks.isEmpty()) {
+                EmptyStatePanel(isHistorical = true)
+            } else {
+                val tasksByDay = remember(allWeekTasks) {
+                    allWeekTasks.groupBy { it.dayOfWeek }.toSortedMap()
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
+                ) {
+                    tasksByDay.forEach { (dayOfWeek, dayTasks) ->
+                        val dateLabel = Utils.getDayFormattedDate(inceptionTimestamp, selectedWeekIndex, dayOfWeek)
+                        val dayCompleted = dayTasks.count { it.isCompleted == 1 }
+                        val dayTotal = dayTasks.size
+
+                        item(key = "header_${selectedWeekIndex}_$dayOfWeek") {
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+                            DayDateSectionHeader(
+                                dateLabel = dateLabel,
+                                completedCount = dayCompleted,
+                                totalCount = dayTotal
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                        }
+
+                        items(
+                            items = dayTasks,
+                            key = { it.taskId }
+                        ) { task ->
+                            TaskItemRowComponent(
+                                task = task,
+                                inceptionTimestamp = inceptionTimestamp,
+                                isReadOnly = true,
+                                onToggle = onToggleTask,
+                                onDelete = onDeleteTask,
+                                categories = categories,
+                                routines = routines
+                            )
+                        }
+
+                        item(key = "spacer_${selectedWeekIndex}_$dayOfWeek") {
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                        }
+                    }
+                }
+            }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
-            ) {
-                items(
-                    items = filteredTasks,
-                    key = { it.taskId }
-                ) { task ->
-                    TaskItemRowComponent(
-                        task = task,
-                        inceptionTimestamp = inceptionTimestamp,
-                        isReadOnly = isHistorical,
-                        onToggle = onToggleTask,
-                        onDelete = onDeleteTask,
-                        categories = categories,
-                        routines = routines
-                    )
+            if (filteredTasks.isEmpty()) {
+                EmptyStatePanel(isHistorical = false)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingTiny)
+                ) {
+                    items(
+                        items = filteredTasks,
+                        key = { it.taskId }
+                    ) { task ->
+                        TaskItemRowComponent(
+                            task = task,
+                            inceptionTimestamp = inceptionTimestamp,
+                            isReadOnly = false,
+                            onToggle = onToggleTask,
+                            onDelete = onDeleteTask,
+                            categories = categories,
+                            routines = routines
+                        )
+                    }
                 }
             }
         }

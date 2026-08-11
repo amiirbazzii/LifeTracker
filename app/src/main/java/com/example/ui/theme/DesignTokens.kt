@@ -19,6 +19,7 @@ object DesignTokens {
     val InputHeight = 52.dp
     val ControlBoxSize = 36.dp
     val StepButtonSize = 44.dp
+    val YearsInputWidth = 80.dp
     val DividerThickness = 1.dp
 
     // Borders & Strokes

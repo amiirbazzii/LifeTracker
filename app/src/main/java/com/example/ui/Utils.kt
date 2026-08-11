@@ -76,6 +76,12 @@ object Utils {
                cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
     }
 
+    fun getDayFormattedDate(inceptionTimestamp: Long, weekIndex: Int, dayOfWeek: Int): String {
+        val cellTimeInMillis = inceptionTimestamp + (weekIndex * 7L + (dayOfWeek - 1)) * 24L * 60L * 60L * 1000L
+        val sdf = SimpleDateFormat("MMMM d", Locale.US)
+        return sdf.format(Date(cellTimeInMillis))
+    }
+
     fun getTodayDayIndex(inceptionTimestamp: Long, currentWeekIndex: Int): Int {
         val today = Calendar.getInstance()
         for (d in 1..7) {

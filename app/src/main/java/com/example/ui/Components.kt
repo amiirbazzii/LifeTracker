@@ -91,7 +91,7 @@ fun BaseSystemHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (mode == SystemHeaderMode.DASHBOARD) {
-                val currentHeaderLabel = headerLabelOverride ?: "YOUR NEXT $targetYears YEAR GOAL"
+                val currentHeaderLabel = headerLabelOverride ?: if (userGoal.isBlank()) "ULTIMATE GOAL & TIMELINE" else "YOUR NEXT $targetYears YEAR GOAL"
                 val currentGoalTitle = goalTitleOverride ?: userGoal
 
                 AnimatedContent(
@@ -117,7 +117,7 @@ fun BaseSystemHeader(
                             modifier = Modifier.padding(bottom = 2.dp)
                         )
                         val goalTextToShow = if (title.isBlank()) {
-                            "> TAP TO SET AN EXECUTION GOAL"
+                            "> TAP TO SET YOUR ULTIMATE GOAL"
                         } else {
                             title
                         }

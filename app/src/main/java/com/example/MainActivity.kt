@@ -78,6 +78,9 @@ fun LifeTrackerApp(
                 OnboardingScreen(
                     onInitialize = { years, goal ->
                         viewModel.initializeTimeline(years, goal)
+                    },
+                    onSkip = {
+                        viewModel.initializeTimeline(5, "")
                     }
                 )
             }
@@ -87,6 +90,21 @@ fun LifeTrackerApp(
                 val subGoals by viewModel.allSubGoals.collectAsStateWithLifecycle()
 
                 when (currentScreen) {
+                    "onboarding" -> {
+                        OnboardingScreen(
+                            initialGoal = userGoal,
+                            initialYears = uiState.meta.targetYears,
+                            initialStep = 1,
+                            canDismiss = true,
+                            onInitialize = { years, goal ->
+                                viewModel.initializeTimeline(years, goal)
+                                currentScreen = "dashboard"
+                            },
+                            onSkip = {
+                                currentScreen = "dashboard"
+                            }
+                        )
+                    }
                     "goal_input" -> {
                         GoalInputScreen(
                             currentGoal = userGoal,
@@ -124,7 +142,7 @@ fun LifeTrackerApp(
                             onDeleteCategory = { id -> viewModel.onDeleteCategory(id) },
                             onUpdateRoutine = { id, title, target -> viewModel.onUpdateRoutine(id, title, target) },
                             onDeleteRoutine = { id -> viewModel.onDeleteRoutine(id) },
-                            onEditGrandGoal = { currentScreen = "goal_input" },
+                            onEditGrandGoal = { currentScreen = "onboarding" },
                             onBack = { currentScreen = "dashboard" },
                             onSaveGrandGoal = { newGoal -> viewModel.saveUserGoal(newGoal) },
                             onReset = {
@@ -140,7 +158,13 @@ fun LifeTrackerApp(
                             categories = categories,
                             routines = routines,
                             subGoals = subGoals,
-                            onEditGoalClick = { currentScreen = "goal_hub" },
+                            onEditGoalClick = {
+                                if (userGoal.isNotBlank()) {
+                                    currentScreen = "goal_hub"
+                                } else {
+                                    currentScreen = "onboarding"
+                                }
+                            },
                             onSelectWeek = { weekIndex -> viewModel.selectWeek(weekIndex) },
                             onAddTask = { title, weekIndex, day, routineId -> viewModel.addTask(title, weekIndex, day, routineId) },
                             onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },

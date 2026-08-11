@@ -19,8 +19,11 @@ val GridLevel3 = Color(0xFF238B45)        // Bright Green L3
 val GridLevel4 = Color(0xFF39FF14)        // Vibrant Neon Green L4 (the glowing accent)
 
 // Zinc / Neutral color palette for brutalist UI elements
-val Zinc500 = Color(0xFF71717A)
 val Zinc400 = Color(0xFFA1A1AA)
+val Zinc500 = Color(0xFF71717A)
+val Zinc600 = Color(0xFF52525B)
+val Zinc700 = Color(0xFF3F3F46)
+val Zinc800 = Color(0xFF27272A)
 val Zinc900 = Color(0xFF18181B)
 val White10 = Color(0x1AFFFFFF)
 val Black10 = Color(0x1A000000)
