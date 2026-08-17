@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">LifeTracker</string>
+    <string name="widget_name">Today\'s Tasks</string>
+    <string name="widget_description">Interactive checklist for today\'s tasks and recurring habits.</string>
+    <string name="matrix_widget_name">Goal Matrix</string>
+    <string name="matrix_widget_description">Timeline matrix showing your progress towards your final goal.</string>
 </resources>

@@ -20,6 +20,9 @@ interface TimelineDao {
     @Query("SELECT * FROM daily_tasks WHERE week_index = :weekIndex ORDER BY created_timestamp DESC")
     fun getTasksForWeek(weekIndex: Int): Flow<List<DailyTask>>
 
+    @Query("SELECT * FROM daily_tasks WHERE week_index = :weekIndex AND day_of_week = :dayOfWeek ORDER BY created_timestamp DESC")
+    fun getTasksForWeekAndDay(weekIndex: Int, dayOfWeek: Int): Flow<List<DailyTask>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: DailyTask)
 

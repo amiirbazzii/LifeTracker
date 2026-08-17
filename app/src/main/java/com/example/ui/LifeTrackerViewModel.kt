@@ -114,6 +114,7 @@ class LifeTrackerViewModel(
                 repository.insertTask(task)
             }
         }
+        com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
     }
 
     fun ensureDailyHabitsInjected() {
@@ -436,6 +437,8 @@ class LifeTrackerViewModel(
             )
             repository.saveTimeline(meta)
             saveUserGoal(goal)
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
         }
     }
 
@@ -455,6 +458,8 @@ class LifeTrackerViewModel(
                 routineId = routineId
             )
             repository.insertTask(task)
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
         }
     }
 
@@ -474,12 +479,16 @@ class LifeTrackerViewModel(
                 _userPoints.value = newPoints
                 prefs.edit().putInt("user_points", newPoints).apply()
             }
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
         }
     }
 
     fun deleteTask(taskId: String) {
         viewModelScope.launch(ioDispatcher) {
             repository.deleteTask(taskId)
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
         }
     }
 
@@ -490,6 +499,8 @@ class LifeTrackerViewModel(
             saveUserGoal("")
             _userPoints.value = 0
             prefs.edit().putInt("user_points", 0).apply()
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
         }
     }
 
