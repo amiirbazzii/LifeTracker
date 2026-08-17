@@ -269,9 +269,9 @@ fun SharedBottomNavigation(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             val navItems = listOf(
+                NavigationItemData("OBJECTIVE", Icons.Default.Edit, "tab_objective"),
                 NavigationItemData("GOAL TREE", Icons.AutoMirrored.Filled.List, "tab_goal_tree"),
                 NavigationItemData("REWARDS", Icons.Default.Star, "tab_rewards"),
-                NavigationItemData("OBJECTIVE", Icons.Default.Edit, "tab_objective"),
                 NavigationItemData("SETTINGS", Icons.Default.Settings, "tab_settings")
             )
 

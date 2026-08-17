@@ -58,9 +58,9 @@ fun GoalHubScreen(
     var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     val activeSectionTitle = when (selectedTab) {
-        0 -> "CATEGORIES"
-        1 -> "REWARDS"
-        2 -> "OBJECTIVES"
+        0 -> "OBJECTIVES"
+        1 -> "CATEGORIES"
+        2 -> "REWARDS"
         else -> "SETTINGS"
     }
 
@@ -95,6 +95,17 @@ fun GoalHubScreen(
             // Render active sub-screen based on selectedTab
             when (selectedTab) {
                 0 -> {
+                    ObjectiveTab(
+                        currentGoal = grandGoal,
+                        targetYears = targetYears,
+                        subGoals = subGoals,
+                        onSaveGoal = onSaveGrandGoal,
+                        onCreateSubGoal = onCreateSubGoal,
+                        onUpdateSubGoal = onUpdateSubGoal,
+                        onDeleteSubGoal = onDeleteSubGoal
+                    )
+                }
+                1 -> {
                     GoalTreeTab(
                         grandGoal = grandGoal,
                         categories = categories,
@@ -110,23 +121,12 @@ fun GoalHubScreen(
                         onDeleteRoutine = onDeleteRoutine
                     )
                 }
-                1 -> {
+                2 -> {
                     RewardsShopTab(
                         rewards = rewards,
                         userPoints = userPoints,
                         onAddRewardClick = { showRewardDialog = true },
                         onClaimReward = onClaimReward
-                    )
-                }
-                2 -> {
-                    ObjectiveTab(
-                        currentGoal = grandGoal,
-                        targetYears = targetYears,
-                        subGoals = subGoals,
-                        onSaveGoal = onSaveGrandGoal,
-                        onCreateSubGoal = onCreateSubGoal,
-                        onUpdateSubGoal = onUpdateSubGoal,
-                        onDeleteSubGoal = onDeleteSubGoal
                     )
                 }
                 3 -> {

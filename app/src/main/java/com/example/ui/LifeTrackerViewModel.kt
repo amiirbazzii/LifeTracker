@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.content.Context
+import android.widget.Toast
 import java.util.UUID
 
 class LifeTrackerViewModel(
@@ -60,6 +61,12 @@ class LifeTrackerViewModel(
         initialValue = emptyList()
     )
 
+    private suspend fun showToast(message: String) {
+        withContext(Dispatchers.Main) {
+            Toast.makeText(application, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun onCreateSubGoal(title: String, durationMonths: Int) {
         viewModelScope.launch(ioDispatcher) {
             val currentSubGoals = repository.allSubGoals.first()
@@ -72,6 +79,7 @@ class LifeTrackerViewModel(
                 createdTimestamp = System.currentTimeMillis()
             )
             repository.insertSubGoal(subGoal)
+            showToast("Sub-goal '$title' created")
         }
     }
 
@@ -137,6 +145,7 @@ class LifeTrackerViewModel(
                 createdTimestamp = System.currentTimeMillis()
             )
             repository.insertCategory(category)
+            showToast("Category '$name' created")
         }
     }
 
@@ -169,6 +178,7 @@ class LifeTrackerViewModel(
                 createdTimestamp = System.currentTimeMillis()
             )
             repository.insertRoutine(routine)
+            showToast("Routine '$title' created")
         }
     }
 
@@ -199,6 +209,7 @@ class LifeTrackerViewModel(
                 createdTimestamp = System.currentTimeMillis()
             )
             repository.insertReward(reward)
+            showToast("Reward '$name' created")
         }
     }
 
@@ -207,6 +218,7 @@ class LifeTrackerViewModel(
             if (deductPoints(reward.pointCost)) {
                 val updated = reward.copy(claimedCount = reward.claimedCount + 1)
                 repository.updateReward(updated)
+                showToast("Reward '${reward.name}' claimed!")
             }
         }
     }

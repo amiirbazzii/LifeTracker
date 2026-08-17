@@ -70,6 +70,42 @@ fun RewardsShopTab(
                     }
                 }
             } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "AVAILABLE REWARDS",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Zinc500
+                    )
+                    
+                    TextButton(
+                        onClick = onAddRewardClick,
+                        modifier = Modifier.testTag("add_reward_header_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Reward",
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(DesignTokens.PaddingTiny))
+                        Text(
+                            text = "ADD REWARD",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
