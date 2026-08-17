@@ -9,6 +9,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
     val allRoutines: Flow<List<Routine>> = timelineDao.getAllRoutines()
     val allRewards: Flow<List<Reward>> = timelineDao.getAllRewards()
     val allSubGoals: Flow<List<SubGoal>> = timelineDao.getAllSubGoals()
+    val allDailyHabits: Flow<List<DailyHabit>> = timelineDao.getAllDailyHabits()
 
     fun getTasksForWeek(weekIndex: Int): Flow<List<DailyTask>> {
         return timelineDao.getTasksForWeek(weekIndex)
@@ -25,6 +26,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
         timelineDao.clearAllRoutines()
         timelineDao.clearAllRewards()
         timelineDao.clearAllSubGoals()
+        timelineDao.clearAllDailyHabits()
         timelineDao.insertTimelineMeta(meta)
     }
 
@@ -47,6 +49,7 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
         timelineDao.clearAllRoutines()
         timelineDao.clearAllRewards()
         timelineDao.clearAllSubGoals()
+        timelineDao.clearAllDailyHabits()
     }
 
     // --- Category CRUD ---
@@ -119,5 +122,22 @@ class LifeTrackerRepository(private val timelineDao: TimelineDao) {
 
     suspend fun clearAllSubGoals() {
         timelineDao.clearAllSubGoals()
+    }
+
+    // --- DailyHabit CRUD ---
+    suspend fun insertDailyHabit(habit: DailyHabit) {
+        timelineDao.insertDailyHabit(habit)
+    }
+
+    suspend fun updateDailyHabit(habit: DailyHabit) {
+        timelineDao.updateDailyHabit(habit)
+    }
+
+    suspend fun deleteDailyHabit(habitId: String) {
+        timelineDao.deleteDailyHabit(habitId)
+    }
+
+    suspend fun clearAllDailyHabits() {
+        timelineDao.clearAllDailyHabits()
     }
 }

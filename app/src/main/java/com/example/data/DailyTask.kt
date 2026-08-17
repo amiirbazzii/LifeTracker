@@ -28,5 +28,8 @@ data class DailyTask(
     val createdTimestamp: Long,
 
     @ColumnInfo(name = "routine_id")
-    val routineId: String? = null
+    val routineId: String? = null,
+
+    @ColumnInfo(name = "habit_id")
+    val habitId: String? = null
 )

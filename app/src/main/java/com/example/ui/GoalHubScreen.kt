@@ -16,6 +16,8 @@ import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.Reward
 import com.example.data.SubGoal
+import com.example.data.DailyHabit
+import com.example.data.DailyTask
 import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +30,8 @@ fun GoalHubScreen(
     routines: List<Routine>,
     rewards: List<Reward>,
     subGoals: List<SubGoal> = emptyList(),
+    habits: List<DailyHabit> = emptyList(),
+    tasks: List<DailyTask> = emptyList(),
     onCreateCategory: (String) -> Unit,
     onCreateRoutine: (String, String, Int) -> Unit,
     onAddReward: (String, Int) -> Unit,
@@ -39,6 +43,9 @@ fun GoalHubScreen(
     onDeleteCategory: (String) -> Unit = {},
     onUpdateRoutine: (String, String, Int) -> Unit = { _, _, _ -> },
     onDeleteRoutine: (String) -> Unit = {},
+    onCreateHabit: (String) -> Unit = {},
+    onUpdateHabit: (String, String) -> Unit = { _, _ -> },
+    onDeleteHabit: (String) -> Unit = {},
     onEditGrandGoal: () -> Unit = {},
     onBack: () -> Unit,
     onSaveGrandGoal: (String) -> Unit = {},
@@ -60,7 +67,8 @@ fun GoalHubScreen(
     val activeSectionTitle = when (selectedTab) {
         0 -> "OBJECTIVES"
         1 -> "CATEGORIES"
-        2 -> "REWARDS"
+        2 -> "HABITS"
+        3 -> "REWARDS"
         else -> "SETTINGS"
     }
 
@@ -122,6 +130,15 @@ fun GoalHubScreen(
                     )
                 }
                 2 -> {
+                    HabitsTab(
+                        habits = habits,
+                        tasks = tasks,
+                        onCreateHabit = onCreateHabit,
+                        onUpdateHabit = onUpdateHabit,
+                        onDeleteHabit = onDeleteHabit
+                    )
+                }
+                3 -> {
                     RewardsShopTab(
                         rewards = rewards,
                         userPoints = userPoints,
@@ -129,11 +146,12 @@ fun GoalHubScreen(
                         onClaimReward = onClaimReward
                     )
                 }
-                3 -> {
+                4 -> {
                     SettingsTab(
                         userPoints = userPoints,
                         categoriesCount = categories.size,
                         routinesCount = routines.size,
+                        habitsCount = habits.size,
                         rewardsCount = rewards.size,
                         onResetClick = { showResetConfirmDialog = true }
                     )

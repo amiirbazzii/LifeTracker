@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
@@ -271,6 +272,7 @@ fun SharedBottomNavigation(
             val navItems = listOf(
                 NavigationItemData("OBJECTIVE", Icons.Default.Edit, "tab_objective"),
                 NavigationItemData("GOAL TREE", Icons.AutoMirrored.Filled.List, "tab_goal_tree"),
+                NavigationItemData("HABITS", Icons.Default.Refresh, "tab_habits"),
                 NavigationItemData("REWARDS", Icons.Default.Star, "tab_rewards"),
                 NavigationItemData("SETTINGS", Icons.Default.Settings, "tab_settings")
             )
@@ -420,6 +422,7 @@ fun TaskItemRowComponent(
 ) {
     val isCompleted = task.isCompleted == 1
     val isDark = isSystemInDarkTheme()
+    val isRecurring = task.habitId != null || task.routineId != null
     val hasRoutine = task.routineId != null
 
     val routine = remember(task.routineId, routines) {
@@ -525,15 +528,30 @@ fun TaskItemRowComponent(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = task.taskTitle.uppercase(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                    ),
-                    color = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isRecurring) {
+                        Text(
+                            text = "↻",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            color = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else GridLevel4,
+                            modifier = Modifier.padding(end = 6.dp)
+                        )
+                    }
+                    Text(
+                        text = task.taskTitle.uppercase(),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        ),
+                        color = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 if (hasRoutine && routine != null) {
                     Spacer(modifier = Modifier.height(2.dp))

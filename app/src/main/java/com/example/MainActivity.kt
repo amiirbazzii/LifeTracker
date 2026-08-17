@@ -88,6 +88,8 @@ fun LifeTrackerApp(
                 val categories by viewModel.allCategories.collectAsStateWithLifecycle()
                 val routines by viewModel.allRoutines.collectAsStateWithLifecycle()
                 val subGoals by viewModel.allSubGoals.collectAsStateWithLifecycle()
+                val habits by viewModel.allDailyHabits.collectAsStateWithLifecycle()
+                val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
 
                 when (currentScreen) {
                     "onboarding" -> {
@@ -131,6 +133,8 @@ fun LifeTrackerApp(
                             routines = routines,
                             rewards = rewards,
                             subGoals = subGoals,
+                            habits = habits,
+                            tasks = allTasks,
                             onCreateCategory = { name -> viewModel.onCreateCategory(name) },
                             onCreateRoutine = { catId, title, target -> viewModel.onCreateRoutine(catId, title, target) },
                             onAddReward = { name, cost -> viewModel.onAddReward(name, cost) },
@@ -142,6 +146,9 @@ fun LifeTrackerApp(
                             onDeleteCategory = { id -> viewModel.onDeleteCategory(id) },
                             onUpdateRoutine = { id, title, target -> viewModel.onUpdateRoutine(id, title, target) },
                             onDeleteRoutine = { id -> viewModel.onDeleteRoutine(id) },
+                            onCreateHabit = { title -> viewModel.onCreateHabit(title) },
+                            onUpdateHabit = { id, title -> viewModel.onUpdateHabit(id, title) },
+                            onDeleteHabit = { id -> viewModel.onDeleteHabit(id) },
                             onEditGrandGoal = { currentScreen = "onboarding" },
                             onBack = { currentScreen = "dashboard" },
                             onSaveGrandGoal = { newGoal -> viewModel.saveUserGoal(newGoal) },

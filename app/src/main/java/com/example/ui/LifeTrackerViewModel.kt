@@ -14,6 +14,7 @@ import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.Reward
 import com.example.data.SubGoal
+import com.example.data.DailyHabit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -60,6 +61,70 @@ class LifeTrackerViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    val allDailyHabits: StateFlow<List<DailyHabit>> = repository.allDailyHabits.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val allTasks: StateFlow<List<DailyTask>> = repository.allTasks.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    init {
+        viewModelScope.launch(ioDispatcher) {
+            combine(
+                repository.timelineMeta,
+                repository.allDailyHabits
+            ) { meta, habits ->
+                meta to habits
+            }.collectLatest { (meta, habits) ->
+                if (meta != null && habits.isNotEmpty()) {
+                    autoInjectDailyHabits(meta, habits)
+                }
+            }
+        }
+    }
+
+    private suspend fun autoInjectDailyHabits(meta: TimelineMeta, habits: List<DailyHabit>) {
+        val elapsedMillis = System.currentTimeMillis() - meta.inceptionTimestamp
+        val weekInMillis = 7 * 24 * 60 * 60 * 1000L
+        val computedWeek = (elapsedMillis / weekInMillis).toInt()
+        val currentWeek = computedWeek.coerceIn(0, meta.totalWeeks - 1)
+        val currentDay = Utils.getTodayDayIndex(meta.inceptionTimestamp, currentWeek)
+
+        val currentTasks = repository.allTasks.first()
+        val todayTasks = currentTasks.filter { it.weekIndex == currentWeek && it.dayOfWeek == currentDay }
+
+        for (habit in habits.filter { it.isActive }) {
+            val alreadyInjected = todayTasks.any { it.habitId == habit.id }
+            if (!alreadyInjected) {
+                val task = DailyTask(
+                    taskId = UUID.randomUUID().toString(),
+                    weekIndex = currentWeek,
+                    dayOfWeek = currentDay,
+                    taskTitle = habit.title,
+                    isCompleted = 0,
+                    createdTimestamp = System.currentTimeMillis(),
+                    habitId = habit.id
+                )
+                repository.insertTask(task)
+            }
+        }
+    }
+
+    fun ensureDailyHabitsInjected() {
+        viewModelScope.launch(ioDispatcher) {
+            val meta = repository.timelineMeta.first() ?: return@launch
+            val habits = repository.allDailyHabits.first()
+            if (habits.isNotEmpty()) {
+                autoInjectDailyHabits(meta, habits)
+            }
+        }
+    }
 
     private suspend fun showToast(message: String) {
         withContext(Dispatchers.Main) {
@@ -189,13 +254,75 @@ class LifeTrackerViewModel(
             if (routine != null) {
                 val updated = routine.copy(title = newTitle, targetCount = newTarget)
                 repository.updateRoutine(updated)
+                showToast("Routine '$newTitle' updated")
             }
         }
     }
 
     fun onDeleteRoutine(routineId: String) {
         viewModelScope.launch(ioDispatcher) {
+            val routines = repository.allRoutines.first()
+            val routine = routines.find { it.id == routineId }
+            val routineTitle = routine?.title ?: ""
             repository.deleteRoutine(routineId)
+            if (routineTitle.isNotBlank()) {
+                showToast("Routine '$routineTitle' deleted")
+            } else {
+                showToast("Routine deleted")
+            }
+        }
+    }
+
+    // --- Daily Habits / Rituals (Separate Dedicated Feature) ---
+    fun onCreateHabit(title: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val habit = DailyHabit(
+                id = UUID.randomUUID().toString(),
+                title = title,
+                createdTimestamp = System.currentTimeMillis(),
+                isActive = true
+            )
+            repository.insertDailyHabit(habit)
+            showToast("Habit '$title' created")
+            ensureDailyHabitsInjected()
+        }
+    }
+
+    fun onUpdateHabit(habitId: String, newTitle: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val habits = repository.allDailyHabits.first()
+            val habit = habits.find { it.id == habitId }
+            if (habit != null) {
+                val updated = habit.copy(title = newTitle)
+                repository.updateDailyHabit(updated)
+
+                // Update today's uncompleted daily tasks linked to this habit
+                val tasks = repository.allTasks.first()
+                tasks.filter { it.habitId == habitId && it.isCompleted == 0 }.forEach { task ->
+                    repository.updateTask(task.copy(taskTitle = newTitle))
+                }
+                showToast("Habit '$newTitle' updated")
+            }
+        }
+    }
+
+    fun onDeleteHabit(habitId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val habits = repository.allDailyHabits.first()
+            val habit = habits.find { it.id == habitId }
+            val habitTitle = habit?.title ?: ""
+            repository.deleteDailyHabit(habitId)
+
+            // Remove uncompleted daily tasks linked to this habit
+            val tasks = repository.allTasks.first()
+            tasks.filter { it.habitId == habitId && it.isCompleted == 0 }.forEach { task ->
+                repository.deleteTask(task.taskId)
+            }
+            if (habitTitle.isNotBlank()) {
+                showToast("Habit '$habitTitle' deleted")
+            } else {
+                showToast("Habit deleted")
+            }
         }
     }
 

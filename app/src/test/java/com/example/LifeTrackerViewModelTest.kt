@@ -204,4 +204,63 @@ class LifeTrackerViewModelTest {
     updatedReward = rewardsFromDb.find { it.id == "reward_1" }
     assertEquals(1, updatedReward?.claimedCount)
   }
+
+  @Test
+  fun testCreateRoutineAndDailyAutoInjection() = runTest(testDispatcher) {
+    // Initialize timeline first
+    viewModel.initializeTimeline(25, "Build Life Mastery")
+
+    // Create routine
+    viewModel.onCreateRoutine("", "Morning Meditation", 30)
+
+    val routinesFromDb = db.timelineDao().getAllRoutines().first()
+    val routine = routinesFromDb.find { it.title == "Morning Meditation" }
+    assertNotNull(routine)
+
+    // Verify task is injected for today
+    val tasksFromDb = db.timelineDao().getAllTasks().first()
+    val injectedTask = tasksFromDb.find { it.routineId == routine?.id }
+    assertNotNull(injectedTask)
+    assertEquals("Morning Meditation", injectedTask?.taskTitle)
+    assertEquals(0, injectedTask?.isCompleted)
+
+    // Toggling the injected task completes it and awards 15 points
+    viewModel.toggleTaskCompletion(injectedTask!!)
+    assertEquals(15, viewModel.userPoints.value)
+
+    val updatedTask = db.timelineDao().getAllTasks().first().find { it.taskId == injectedTask.taskId }
+    assertEquals(1, updatedTask?.isCompleted)
+  }
+
+  @Test
+  fun testUpdateRoutineUpdatesUncompletedDailyTasks() = runTest(testDispatcher) {
+    viewModel.initializeTimeline(25, "Mastery")
+    viewModel.onCreateRoutine("", "Read Books", 10)
+
+    val routine = db.timelineDao().getAllRoutines().first().find { it.title == "Read Books" }!!
+    viewModel.onUpdateRoutine(routine.id, "Read 30 Pages", 15)
+
+    val updatedRoutine = db.timelineDao().getAllRoutines().first().find { it.id == routine.id }
+    assertEquals("Read 30 Pages", updatedRoutine?.title)
+    assertEquals(15, updatedRoutine?.targetCount)
+
+    val tasks = db.timelineDao().getAllTasks().first()
+    val task = tasks.find { it.routineId == routine.id }
+    assertEquals("Read 30 Pages", task?.taskTitle)
+  }
+
+  @Test
+  fun testDeleteRoutineCleansUpUncompletedDailyTasks() = runTest(testDispatcher) {
+    viewModel.initializeTimeline(25, "Mastery")
+    viewModel.onCreateRoutine("", "Morning Stretch", 10)
+
+    val routine = db.timelineDao().getAllRoutines().first().find { it.title == "Morning Stretch" }!!
+    viewModel.onDeleteRoutine(routine.id)
+
+    val routines = db.timelineDao().getAllRoutines().first()
+    assertEquals(null, routines.find { it.id == routine.id })
+
+    val tasks = db.timelineDao().getAllTasks().first()
+    assertEquals(null, tasks.find { it.routineId == routine.id })
+  }
 }

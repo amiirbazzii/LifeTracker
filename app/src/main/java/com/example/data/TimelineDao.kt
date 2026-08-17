@@ -101,4 +101,20 @@ interface TimelineDao {
 
     @Query("DELETE FROM sub_goals")
     suspend fun clearAllSubGoals()
+
+    // --- DailyHabit Operations ---
+    @Query("SELECT * FROM daily_habits ORDER BY createdTimestamp ASC")
+    fun getAllDailyHabits(): Flow<List<DailyHabit>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDailyHabit(habit: DailyHabit)
+
+    @Update
+    suspend fun updateDailyHabit(habit: DailyHabit)
+
+    @Query("DELETE FROM daily_habits WHERE id = :habitId")
+    suspend fun deleteDailyHabit(habitId: String)
+
+    @Query("DELETE FROM daily_habits")
+    suspend fun clearAllDailyHabits()
 }

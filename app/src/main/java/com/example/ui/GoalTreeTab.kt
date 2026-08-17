@@ -49,62 +49,32 @@ fun GoalTreeTab(
         routines.groupBy { it.categoryId }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (categories.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(DesignTokens.PaddingExtraLarge),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "NO CATEGORIES CREATED",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Zinc500,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-                Text(
-                    text = "Add categories to organize your routines and track progress.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = Zinc500,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
-                Button(
-                    onClick = onAddCategoryClick,
-                    shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier.testTag("add_category_button_empty")
-                ) {
-                    Text("ADD CATEGORY", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                }
-            }
-        } else {
-            Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = DesignTokens.PaddingLarge)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
+            contentPadding = PaddingValues(top = DesignTokens.PaddingSmall, bottom = 80.dp)
+        ) {
+            item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ACTIVE CATEGORIES",
+                        text = "ACTIVE CATEGORIES (${categories.size})",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = DesignTokens.LetterSpacingWide
                         ),
                         color = Zinc500
                     )
-                    
+
                     TextButton(
                         onClick = onAddCategoryClick,
                         modifier = Modifier.testTag("add_category_header_button")
@@ -115,29 +85,73 @@ fun GoalTreeTab(
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(DesignTokens.PaddingTiny))
-                        Text("ADD CATEGORY", style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
-                    }
-                }
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = DesignTokens.PaddingLarge),
-                    verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(categories, key = { it.id }) { category ->
-                        val categoryRoutines = remember(routinesByCategory, category.id) {
-                            routinesByCategory[category.id] ?: emptyList()
-                        }
-                        CategoryCard(
-                            category = category,
-                            routines = categoryRoutines,
-                            onAddRoutineClick = { onAddRoutineClick(category.id) },
-                            onCategoryClick = { editingCategory = it },
-                            onRoutineClick = { editingRoutine = it }
+                        Text(
+                            "ADD CATEGORY",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                     }
+                }
+            }
+
+            if (categories.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                DesignTokens.StrokeThin,
+                                primaryLabelColor.copy(alpha = 0.15f),
+                                RoundedCornerShape(DesignTokens.PaddingZero)
+                            )
+                            .padding(DesignTokens.PaddingExtraLarge),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "NO CATEGORIES CREATED",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Zinc500
+                            )
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                            Text(
+                                text = "Add categories to organize your routines and track progress.",
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                                color = Zinc500,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
+                            Button(
+                                onClick = onAddCategoryClick,
+                                shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                modifier = Modifier.testTag("add_category_button_empty")
+                            ) {
+                                Text("ADD CATEGORY", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            } else {
+                items(categories, key = { it.id }) { category ->
+                    val categoryRoutines = remember(routinesByCategory, category.id) {
+                        routinesByCategory[category.id] ?: emptyList()
+                    }
+                    CategoryCard(
+                        category = category,
+                        routines = categoryRoutines,
+                        onAddRoutineClick = { onAddRoutineClick(category.id) },
+                        onCategoryClick = { editingCategory = it },
+                        onRoutineClick = { editingRoutine = it }
+                    )
                 }
             }
         }
@@ -607,15 +621,28 @@ fun RoutineItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = routine.title,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "↻",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Black
+                        ),
+                        color = GridLevel4,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    Text(
+                        text = routine.title,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
 
                 Text(
                     text = "${routine.completedCount} / ${routine.targetCount} MO",

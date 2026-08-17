@@ -22,6 +22,7 @@ fun SettingsTab(
     userPoints: Int,
     categoriesCount: Int,
     routinesCount: Int,
+    habitsCount: Int = 0,
     rewardsCount: Int,
     onResetClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -49,6 +50,7 @@ fun SettingsTab(
             verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall)
         ) {
             MetricRow(label = "TOTAL POINTS", value = "$userPoints PTS")
+            MetricRow(label = "DAILY HABITS", value = habitsCount.toString())
             MetricRow(label = "ACTIVE CATEGORIES", value = categoriesCount.toString())
             MetricRow(label = "ROUTINES TRACKED", value = routinesCount.toString())
             MetricRow(label = "REWARDS CREATED", value = rewardsCount.toString())
