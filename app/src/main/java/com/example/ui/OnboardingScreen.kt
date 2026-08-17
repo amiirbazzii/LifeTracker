@@ -53,226 +53,478 @@ fun OnboardingScreen(
     val parsedYears = yearsText.toIntOrNull()
     val isYearsValid = parsedYears != null && parsedYears in 1..50
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .verticalScroll(scrollState)
-            .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingMedium),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
     ) {
-        // Top Bar / Dismiss if applicable
-        if (canDismiss) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(
-                    onClick = onSkip,
-                    modifier = Modifier.testTag("dismiss_onboarding_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = Zinc400
-                    )
-                }
-            }
-        } else {
-            Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-        }
-
-        // App Logo
-        Image(
-            painter = painterResource(id = R.drawable.ic_app_logo),
-            contentDescription = "App Logo",
+        // Scrollable Main Content Area
+        Column(
             modifier = Modifier
-                .size(52.dp)
-                .testTag("app_logo_image")
-        )
-
-        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-
-        // Stark Brutalist Header
-        Text(
-            text = DesignTokens.APP_TITLE,
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = DesignTokens.LetterSpacingHeadline,
-                fontFamily = FontFamily.Monospace
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-        Text(
-            text = if (currentStep == 1) "STEP 1 · YOUR GOAL" else "STEP 2 · TIMELINE",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = DesignTokens.LetterSpacingWide,
-                fontWeight = FontWeight.Bold
-            ),
-            color = GridLevel4,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
-
-        // Animated transition between Step 1 and Step 2
-        AnimatedContent(
-            targetState = currentStep,
-            transitionSpec = {
-                fadeIn() togetherWith fadeOut()
-            },
-            label = "OnboardingStepTransition"
-        ) { step ->
-            if (step == 1) {
-                // ==================== STEP 1: ULTIMATE GOAL ====================
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = DesignTokens.PaddingLarge)
+                .padding(top = DesignTokens.PaddingSmall, bottom = 150.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            if (canDismiss) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = DesignTokens.PaddingSmall),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    // Educational Explanation Card
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                BorderStroke(DesignTokens.StrokeMedium, Zinc700),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .background(Color(0xFF0D0D0D))
-                            .padding(DesignTokens.PaddingMedium)
+                    IconButton(
+                        onClick = onSkip,
+                        modifier = Modifier.testTag("dismiss_onboarding_button")
                     ) {
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Info",
-                                    tint = GridLevel4,
-                                    modifier = Modifier.size(15.dp)
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Zinc400
+                        )
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+            }
+
+            // App Logo
+            Image(
+                painter = painterResource(id = R.drawable.ic_app_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(48.dp)
+                    .testTag("app_logo_image")
+            )
+
+            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+            // Stark Brutalist Header
+            Text(
+                text = DesignTokens.APP_TITLE,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = DesignTokens.LetterSpacingHeadline,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+            Text(
+                text = if (currentStep == 1) "STEP 1 · YOUR GOAL" else "STEP 2 · TIMELINE",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = DesignTokens.LetterSpacingWide,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = GridLevel4,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+
+            // Animated transition between Step 1 and Step 2
+            AnimatedContent(
+                targetState = currentStep,
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                },
+                label = "OnboardingStepTransition"
+            ) { step ->
+                if (step == 1) {
+                    // ==================== STEP 1: ULTIMATE GOAL ====================
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Educational Explanation Card
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    BorderStroke(DesignTokens.StrokeMedium, Zinc700),
+                                    RoundedCornerShape(DesignTokens.PaddingZero)
                                 )
+                                .background(Color(0xFF0D0D0D))
+                                .padding(DesignTokens.PaddingMedium)
+                        ) {
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Info",
+                                        tint = GridLevel4,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Text(
+                                        text = "WHAT IS THIS?",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Black,
+                                            letterSpacing = DesignTokens.LetterSpacingWide
+                                        ),
+                                        color = MonochromeWhite
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
                                 Text(
-                                    text = "WHAT IS THIS?",
+                                    text = "Your primary long-term target. Your routines and matrix will align with it.",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp
+                                    ),
+                                    color = Zinc400
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+
+                        // Goal Input Box
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    BorderStroke(
+                                        if (isGoalValid) DesignTokens.StrokeThick else DesignTokens.StrokeMedium,
+                                        if (isGoalValid) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                                    ),
+                                    RoundedCornerShape(DesignTokens.PaddingZero)
+                                )
+                                .background(Color.Black)
+                                .padding(DesignTokens.PaddingMedium)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "ENTER GOAL",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Black,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = DesignTokens.LetterSpacingWide
+                                    ),
+                                    color = if (isGoalValid) GridLevel4 else MonochromeWhite
+                                )
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+                                OutlinedTextField(
+                                    value = goalText,
+                                    onValueChange = {
+                                        goalText = it
+                                        errorMessage = null
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            text = "e.g. Launch business, master design, get fit",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = Zinc500,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        )
+                                    },
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        color = MonochromeWhite,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("onboarding_goal_input"),
+                                    shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = GridLevel4,
+                                        unfocusedBorderColor = Zinc700,
+                                        focusedContainerColor = Color(0xFF0D0D0D),
+                                        unfocusedContainerColor = Color(0xFF0D0D0D)
+                                    ),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                    keyboardActions = KeyboardActions(onDone = {
+                                        focusManager.clearFocus()
+                                        if (isGoalValid) {
+                                            currentStep = 2
+                                        }
+                                    }),
+                                    singleLine = false,
+                                    maxLines = 3
+                                )
+                            }
+                        }
+
+                        errorMessage?.let { msg ->
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                            Text(
+                                text = "⚠️ $msg",
+                                color = Color(0xFFFF5252),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                    }
+                } else {
+                    // ==================== STEP 2: TIMELINE ====================
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Summary of Goal entered in Step 1
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    BorderStroke(DesignTokens.StrokeMedium, GridLevel4.copy(alpha = 0.6f)),
+                                    RoundedCornerShape(DesignTokens.PaddingZero)
+                                )
+                                .background(Color(0xFF0D0D0D))
+                                .padding(DesignTokens.PaddingMedium)
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "GOAL",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = DesignTokens.LetterSpacingWide
+                                        ),
+                                        color = GridLevel4
+                                    )
+
+                                    Text(
+                                        text = "EDIT",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = DesignTokens.LetterSpacingWide
+                                        ),
+                                        color = Zinc400,
+                                        modifier = Modifier.clickable { currentStep = 1 }
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+                                Text(
+                                    text = goalText.trim(),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MonochromeWhite
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+
+                        // Timeline Selector Box
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                                    RoundedCornerShape(DesignTokens.PaddingZero)
+                                )
+                                .background(Color.Black)
+                                .padding(DesignTokens.PaddingMedium)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "YEARS TO ACHIEVE",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
                                         letterSpacing = DesignTokens.LetterSpacingWide
                                     ),
                                     color = MonochromeWhite
                                 )
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
+
+                                Text(
+                                    text = "How many years to reach this goal?",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontFamily = FontFamily.Monospace
+                                    ),
+                                    color = Zinc400,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+
+                                // Stepper and Numeric Entry
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    // Decrease button
+                                    Box(
+                                        modifier = Modifier
+                                            .size(DesignTokens.StepButtonSize)
+                                            .background(Color.Black)
+                                            .border(
+                                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary),
+                                                RoundedCornerShape(DesignTokens.PaddingZero)
+                                            )
+                                            .clickable {
+                                                val current = yearsText.toIntOrNull() ?: 5
+                                                if (current > 1) {
+                                                    yearsText = (current - 1).toString()
+                                                    errorMessage = null
+                                                }
+                                            }
+                                            .testTag("step_decrement_button"),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "-",
+                                            style = MaterialTheme.typography.headlineMedium.copy(
+                                                fontWeight = FontWeight.Black,
+                                                fontFamily = FontFamily.Monospace
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+
+                                    OutlinedTextField(
+                                        value = yearsText,
+                                        onValueChange = { input ->
+                                            if (input.all { it.isDigit() } && input.length <= 2) {
+                                                yearsText = input
+                                                errorMessage = null
+                                            }
+                                        },
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction = ImeAction.Done
+                                        ),
+                                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                                        textStyle = MaterialTheme.typography.headlineMedium.copy(
+                                            fontWeight = FontWeight.Black,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = FontFamily.Monospace,
+                                            color = MonochromeWhite
+                                        ),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = GridLevel4,
+                                            unfocusedBorderColor = Zinc700,
+                                            focusedContainerColor = Color(0xFF0D0D0D),
+                                            unfocusedContainerColor = Color(0xFF0D0D0D)
+                                        ),
+                                        modifier = Modifier
+                                            .width(DesignTokens.YearsInputWidth)
+                                            .padding(horizontal = DesignTokens.PaddingSmall)
+                                            .testTag("years_input_field")
+                                    )
+
+                                    // Increase button
+                                    Box(
+                                        modifier = Modifier
+                                            .size(DesignTokens.StepButtonSize)
+                                            .background(Color.Black)
+                                            .border(
+                                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary),
+                                                RoundedCornerShape(DesignTokens.PaddingZero)
+                                            )
+                                            .clickable {
+                                                val current = yearsText.toIntOrNull() ?: 5
+                                                if (current < 50) {
+                                                    yearsText = (current + 1).toString()
+                                                    errorMessage = null
+                                                }
+                                            }
+                                            .testTag("step_increment_button"),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "+",
+                                            style = MaterialTheme.typography.headlineMedium.copy(
+                                                fontWeight = FontWeight.Black,
+                                                fontFamily = FontFamily.Monospace
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+                                val totalWeeks = (yearsText.toIntOrNull() ?: 5) * 52
+                                Text(
+                                    text = "$yearsText YEARS · $totalWeeks WEEKS",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        letterSpacing = DesignTokens.LetterSpacingWide,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = GridLevel4
+                                )
                             }
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-                            Text(
-                                text = "Your primary long-term target. Your routines and matrix will align with it.",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.sp,
-                                    lineHeight = 17.sp
-                                ),
-                                color = Zinc400
-                            )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
-
-                    // Goal Input Box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                BorderStroke(
-                                    if (isGoalValid) DesignTokens.StrokeThick else DesignTokens.StrokeMedium,
-                                    if (isGoalValid) GridLevel4 else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                ),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .background(Color.Black)
-                            .padding(DesignTokens.PaddingLarge)
-                    ) {
-                        Column {
+                        errorMessage?.let { msg ->
+                            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
                             Text(
-                                text = "ENTER GOAL",
+                                text = "⚠️ $msg",
+                                color = Color(0xFFFF5252),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = DesignTokens.LetterSpacingWide
+                                    fontWeight = FontWeight.Bold
                                 ),
-                                color = if (isGoalValid) GridLevel4 else MonochromeWhite
-                            )
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-
-                            OutlinedTextField(
-                                value = goalText,
-                                onValueChange = {
-                                    goalText = it
-                                    errorMessage = null
-                                },
-                                placeholder = {
-                                    Text(
-                                        text = "e.g. Launch business, master design, get fit",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = Zinc500,
-                                            fontFamily = FontFamily.Monospace
-                                        )
-                                    )
-                                },
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    color = MonochromeWhite,
-                                    fontWeight = FontWeight.SemiBold
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("onboarding_goal_input"),
-                                shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = GridLevel4,
-                                    unfocusedBorderColor = Zinc700,
-                                    focusedContainerColor = Color(0xFF0D0D0D),
-                                    unfocusedContainerColor = Color(0xFF0D0D0D)
-                                ),
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = {
-                                    focusManager.clearFocus()
-                                    if (isGoalValid) {
-                                        currentStep = 2
-                                    }
-                                }),
-                                singleLine = false,
-                                maxLines = 3
+                                textAlign = TextAlign.Center
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
                     }
+                }
+            }
+        }
 
-                    errorMessage?.let { msg ->
-                        Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-                        Text(
-                            text = "⚠️ $msg",
-                            color = Color(0xFFFF5252),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingExtraLarge))
-
-                    // Action Buttons: 1. Confirm (Continue) and 2. Skip
+        // Pinned Bottom Actions Bar - Always fixed at bottom of page
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(DesignTokens.StrokeThin, Zinc800),
+                    RoundedCornerShape(DesignTokens.PaddingZero)
+                ),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DesignTokens.PaddingLarge)
+                    .padding(top = 16.dp, bottom = 16.dp)
+            ) {
+                if (currentStep == 1) {
                     Button(
                         onClick = {
                             if (isGoalValid) {
@@ -306,7 +558,7 @@ fun OnboardingScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+                    Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
 
                     OutlinedButton(
                         onClick = {
@@ -332,234 +584,7 @@ fun OnboardingScreen(
                             )
                         )
                     }
-                }
-            } else {
-                // ==================== STEP 2: TIMELINE ====================
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Summary of Goal entered in Step 1
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                BorderStroke(DesignTokens.StrokeMedium, GridLevel4.copy(alpha = 0.6f)),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .background(Color(0xFF0D0D0D))
-                            .padding(DesignTokens.PaddingMedium)
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "GOAL",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = DesignTokens.LetterSpacingWide
-                                    ),
-                                    color = GridLevel4
-                                )
-
-                                Text(
-                                    text = "EDIT",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = DesignTokens.LetterSpacingWide
-                                    ),
-                                    color = Zinc400,
-                                    modifier = Modifier.clickable { currentStep = 1 }
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-                            Text(
-                                text = goalText.trim(),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MonochromeWhite
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingLarge))
-
-                    // Timeline Selector Box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .background(Color.Black)
-                            .padding(DesignTokens.PaddingLarge)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "YEARS TO ACHIEVE",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = DesignTokens.LetterSpacingWide
-                                ),
-                                color = MonochromeWhite
-                            )
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingTiny))
-
-                            Text(
-                                text = "How many years to reach this goal?",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = FontFamily.Monospace
-                                ),
-                                color = Zinc400,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingExtraLarge))
-
-                            // Stepper and Numeric Entry
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Decrease button
-                                Box(
-                                    modifier = Modifier
-                                        .size(DesignTokens.StepButtonSize)
-                                        .background(Color.Black)
-                                        .border(
-                                            BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary),
-                                            RoundedCornerShape(DesignTokens.PaddingZero)
-                                        )
-                                        .clickable {
-                                            val current = yearsText.toIntOrNull() ?: 5
-                                            if (current > 1) {
-                                                yearsText = (current - 1).toString()
-                                                errorMessage = null
-                                            }
-                                        }
-                                        .testTag("step_decrement_button"),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "-",
-                                        style = MaterialTheme.typography.headlineMedium.copy(
-                                            fontWeight = FontWeight.Black,
-                                            fontFamily = FontFamily.Monospace
-                                        ),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                OutlinedTextField(
-                                    value = yearsText,
-                                    onValueChange = { input ->
-                                        if (input.all { it.isDigit() } && input.length <= 2) {
-                                            yearsText = input
-                                            errorMessage = null
-                                        }
-                                    },
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                    textStyle = MaterialTheme.typography.headlineMedium.copy(
-                                        fontWeight = FontWeight.Black,
-                                        textAlign = TextAlign.Center,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = MonochromeWhite
-                                    ),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = GridLevel4,
-                                        unfocusedBorderColor = Zinc700,
-                                        focusedContainerColor = Color(0xFF0D0D0D),
-                                        unfocusedContainerColor = Color(0xFF0D0D0D)
-                                    ),
-                                    modifier = Modifier
-                                        .width(DesignTokens.YearsInputWidth)
-                                        .padding(horizontal = DesignTokens.PaddingSmall)
-                                        .testTag("years_input_field")
-                                )
-
-                                // Increase button
-                                Box(
-                                    modifier = Modifier
-                                        .size(DesignTokens.StepButtonSize)
-                                        .background(Color.Black)
-                                        .border(
-                                            BorderStroke(DesignTokens.StrokeMedium, MaterialTheme.colorScheme.primary),
-                                            RoundedCornerShape(DesignTokens.PaddingZero)
-                                        )
-                                        .clickable {
-                                            val current = yearsText.toIntOrNull() ?: 5
-                                            if (current < 50) {
-                                                yearsText = (current + 1).toString()
-                                                errorMessage = null
-                                            }
-                                        }
-                                        .testTag("step_increment_button"),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "+",
-                                        style = MaterialTheme.typography.headlineMedium.copy(
-                                            fontWeight = FontWeight.Black,
-                                            fontFamily = FontFamily.Monospace
-                                        ),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-
-                            val totalWeeks = (yearsText.toIntOrNull() ?: 5) * 52
-                            Text(
-                                text = "$yearsText YEARS · $totalWeeks WEEKS",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    letterSpacing = DesignTokens.LetterSpacingWide,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = GridLevel4
-                            )
-                        }
-                    }
-
-                    errorMessage?.let { msg ->
-                        Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-                        Text(
-                            text = "⚠️ $msg",
-                            color = Color(0xFFFF5252),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingExtraLarge))
-
-                    // Action Buttons: 1. Confirm & Start and 2. Back
+                } else {
                     Button(
                         onClick = {
                             val years = yearsText.toIntOrNull()
@@ -593,7 +618,7 @@ fun OnboardingScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+                    Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
 
                     OutlinedButton(
                         onClick = {
@@ -623,7 +648,5 @@ fun OnboardingScreen(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(DesignTokens.PaddingDoubleExtraLarge))
     }
 }

@@ -32,36 +32,6 @@ fun RewardsShopTab(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = DesignTokens.PaddingLarge, vertical = DesignTokens.PaddingSmall),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "REWARDS",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Zinc500
-                )
-
-                TextButton(
-                    onClick = onAddRewardClick,
-                    modifier = Modifier.testTag("add_reward_header_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Reward",
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(DesignTokens.PaddingTiny))
-                    Text("ADD REWARD", style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
-                }
-            }
-
             if (rewards.isEmpty()) {
                 Column(
                     modifier = Modifier
@@ -105,7 +75,7 @@ fun RewardsShopTab(
                         .fillMaxSize()
                         .padding(horizontal = DesignTokens.PaddingLarge),
                     verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingMedium),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(top = DesignTokens.PaddingSmall, bottom = 80.dp)
                 ) {
                     items(rewards, key = { it.id }) { reward ->
                         RewardCard(

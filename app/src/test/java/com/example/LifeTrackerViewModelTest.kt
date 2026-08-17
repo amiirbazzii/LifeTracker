@@ -43,7 +43,7 @@ class LifeTrackerViewModelTest {
         .setTransactionExecutor(directExecutor)
         .build()
     repository = LifeTrackerRepository(db.timelineDao())
-    viewModel = LifeTrackerViewModel(repository, context)
+    viewModel = LifeTrackerViewModel(repository, context, testDispatcher)
 
     // Clear shared preferences
     val prefs = context.getSharedPreferences("life_tracker_prefs", Context.MODE_PRIVATE)

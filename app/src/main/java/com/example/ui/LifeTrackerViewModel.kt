@@ -14,6 +14,7 @@ import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.Reward
 import com.example.data.SubGoal
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,11 @@ import kotlinx.coroutines.withContext
 import android.content.Context
 import java.util.UUID
 
-class LifeTrackerViewModel(private val repository: LifeTrackerRepository, private val application: Application) : ViewModel() {
+class LifeTrackerViewModel(
+    private val repository: LifeTrackerRepository,
+    private val application: Application,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
 
     private val prefs = application.getSharedPreferences("life_tracker_prefs", Context.MODE_PRIVATE)
 
@@ -56,7 +61,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     )
 
     fun onCreateSubGoal(title: String, durationMonths: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val currentSubGoals = repository.allSubGoals.first()
             val nextStartMonth = currentSubGoals.sumOf { it.durationMonths }
             val subGoal = SubGoal(
@@ -71,7 +76,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onUpdateSubGoal(subGoalId: String, newTitle: String, newDurationMonths: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val currentSubGoals = repository.allSubGoals.first()
             val existing = currentSubGoals.find { it.id == subGoalId }
             if (existing != null) {
@@ -83,7 +88,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onDeleteSubGoal(subGoalId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repository.deleteSubGoal(subGoalId)
             recalculateSubGoalStartMonths()
         }
@@ -101,18 +106,16 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun saveUserGoal(goal: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             _userGoal.value = goal
             prefs.edit().putString("user_goal", goal).apply()
         }
     }
 
     fun addPoints(points: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val newPoints = _userPoints.value + points
-            _userPoints.value = newPoints
-            prefs.edit().putInt("user_points", newPoints).apply()
-        }
+        val newPoints = _userPoints.value + points
+        _userPoints.value = newPoints
+        prefs.edit().putInt("user_points", newPoints).apply()
     }
 
     fun deductPoints(points: Int): Boolean {
@@ -127,7 +130,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onCreateCategory(name: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val category = Category(
                 id = UUID.randomUUID().toString(),
                 name = name,
@@ -138,7 +141,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onUpdateCategory(categoryId: String, newName: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val categories = repository.allCategories.first()
             val category = categories.find { it.id == categoryId }
             if (category != null) {
@@ -149,14 +152,14 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onDeleteCategory(categoryId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repository.deleteCategory(categoryId)
             repository.deleteRoutinesForCategory(categoryId)
         }
     }
 
     fun onCreateRoutine(catId: String, title: String, target: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val routine = Routine(
                 id = UUID.randomUUID().toString(),
                 categoryId = catId,
@@ -170,7 +173,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onUpdateRoutine(routineId: String, newTitle: String, newTarget: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val routines = repository.allRoutines.first()
             val routine = routines.find { it.id == routineId }
             if (routine != null) {
@@ -181,13 +184,13 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onDeleteRoutine(routineId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repository.deleteRoutine(routineId)
         }
     }
 
     fun onAddReward(name: String, cost: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val reward = Reward(
                 id = UUID.randomUUID().toString(),
                 name = name,
@@ -200,7 +203,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun onClaimReward(reward: Reward) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             if (deductPoints(reward.pointCost)) {
                 val updated = reward.copy(claimedCount = reward.claimedCount + 1)
                 repository.updateReward(updated)
@@ -209,7 +212,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun incrementRoutineCompletion(routineId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val routines = repository.allRoutines.first()
             val routine = routines.find { it.id == routineId }
             if (routine != null) {
@@ -285,7 +288,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     )
 
     fun initializeTimeline(years: Int, goal: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val totalWeeks = years * 52
             val meta = TimelineMeta(
                 targetYears = years,
@@ -302,7 +305,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun addTask(title: String, weekIndex: Int, dayOfWeek: Int, routineId: String? = null) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val task = DailyTask(
                 taskId = UUID.randomUUID().toString(),
                 weekIndex = weekIndex,
@@ -317,7 +320,7 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun toggleTaskCompletion(task: DailyTask) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val willBeCompleted = task.isCompleted == 0
             val updated = task.copy(isCompleted = if (willBeCompleted) 1 else 0)
             repository.updateTask(updated)
@@ -336,13 +339,13 @@ class LifeTrackerViewModel(private val repository: LifeTrackerRepository, privat
     }
 
     fun deleteTask(taskId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repository.deleteTask(taskId)
         }
     }
 
     fun resetTimeline() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repository.resetApp()
             _selectedWeekIndex.value = null
             saveUserGoal("")
