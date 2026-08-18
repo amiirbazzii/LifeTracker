@@ -49,14 +49,13 @@
             android:id="@+id/widget_counter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#27272A"
-            android:paddingLeft="6dp"
+            android:paddingLeft="4dp"
             android:paddingTop="2dp"
-            android:paddingRight="6dp"
+            android:paddingRight="4dp"
             android:paddingBottom="2dp"
             android:text="0/0"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
+            android:textColor="#A1A1AA"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:typeface="monospace" />
 
@@ -75,17 +74,16 @@
             android:typeface="monospace" />
 
         <!-- Open App Action Button -->
-        <Button
+        <TextView
             android:id="@+id/widget_btn_open_app"
-            android:layout_width="wrap_content"
+            android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginLeft="6dp"
             android:background="#FFFFFF"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:text="+ APP"
+            android:gravity="center"
+            android:text="+"
             android:textColor="#000000"
-            android:textSize="11sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:typeface="monospace" />
     </LinearLayout>

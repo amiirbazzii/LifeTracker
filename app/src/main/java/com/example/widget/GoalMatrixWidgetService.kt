@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.example.R
@@ -104,166 +105,189 @@ class GoalMatrixRemoteViewsFactory(
         matrixRowBitmaps.clear()
         if (totalWeeks <= 0) return
 
-        // Dynamic columns based on current widget width:
-        // Size 2 width (~110-170dp): exactly 5 squares per row
-        // Size 3 width (~171-250dp): exactly 7 squares per row
-        // Size 4 width (~251-330dp): exactly 9 squares per row
-        // Larger sizes: 11-13 squares per row
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-        val minWidthDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 0
-        
-        val columns = when {
-            minWidthDp <= 170 -> 5
-            minWidthDp <= 250 -> 7
-            minWidthDp <= 330 -> 9
-            minWidthDp <= 410 -> 11
-            else -> 13
-        }
-
-        // Each square matches the app proportion with clearly visible typography
-        val cellWidth = 48f
-        val cellHeight = 42f
-        val spacing = 6f
+        // 13 columns matching the app's timeline grid layout
+        val columns = 13
+        val cellSize = 38f
+        val spacing = 4f
         val weeksPerMonth = 4
 
+        val totalCanvasWidth = ((columns * cellSize) + ((columns - 1) * spacing)).toInt()
+        val rowHeight = (cellSize + spacing).toInt()
+
+        // Exact color tokens from Color.kt
         val levelColors = intArrayOf(
-            Color.parseColor("#18181B"), // Level 0 (Dark)
-            Color.parseColor("#00441B"), // Level 1
-            Color.parseColor("#006D2C"), // Level 2
-            Color.parseColor("#238B45"), // Level 3
-            Color.parseColor("#39FF14")  // Level 4
+            Color.parseColor("#0A0A0A"), // GridLevel0_Dark
+            Color.parseColor("#00441B"), // GridLevel1
+            Color.parseColor("#006D2C"), // GridLevel2
+            Color.parseColor("#238B45"), // GridLevel3
+            Color.parseColor("#39FF14")  // GridLevel4 (Neon Matrix Green)
         )
+
+        val monoBold = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        val monoNormal = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
-            isFakeBoldText = true
-            textSize = 15f
+            typeface = monoNormal
+            textSize = 13f
         }
 
-        val totalCanvasWidth = ((columns * cellWidth) + ((columns - 1) * spacing)).toInt()
-        val rowHeight = (cellHeight + 4f).toInt()
+        // Data structure for placed grid items
+        data class GridPlacedItem(
+            val colStart: Int,
+            val span: Int,
+            val weekIdx: Int
+        )
 
-        // Organize weeks and expanded current week into rows
-        var weekIdx = 0
-        while (weekIdx < totalWeeks) {
-            val isCurrentInThisRow = (weekIdx == currentWeekIndex)
+        // 1. Pack items into 13-column rows matching LazyVerticalGrid logic
+        val rowsList = mutableListOf<MutableList<GridPlacedItem>>()
+        var currentRow = mutableListOf<GridPlacedItem>()
+        var currentCol = 0
 
+        for (w in 0 until totalWeeks) {
+            val span = if (w == currentWeekIndex) 7 else 1
+            if (currentCol + span > columns) {
+                rowsList.add(currentRow)
+                currentRow = mutableListOf()
+                currentCol = 0
+            }
+            currentRow.add(GridPlacedItem(currentCol, span, w))
+            currentCol += span
+            if (currentCol >= columns) {
+                rowsList.add(currentRow)
+                currentRow = mutableListOf()
+                currentCol = 0
+            }
+        }
+        if (currentRow.isNotEmpty()) {
+            rowsList.add(currentRow)
+        }
+
+        // 2. Render each row bitmap with equal horizontal and vertical spacing
+        for (rowItems in rowsList) {
             val rowBitmap = Bitmap.createBitmap(totalCanvasWidth, rowHeight, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(rowBitmap)
             canvas.drawColor(Color.TRANSPARENT)
 
-            if (isCurrentInThisRow) {
-                // The current week is expanded into 7 individual day blocks across the row
-                val dayColumns = 7
-                val daySubCellWidth = (totalCanvasWidth - (spacing * (dayColumns - 1))) / dayColumns.toFloat()
+            for (item in rowItems) {
+                val startX = item.colStart * (cellSize + spacing)
 
-                for (d in 1..7) {
-                    val dayTasks = currentWeekTasks.filter { it.dayOfWeek == d }
-                    val dayTotal = dayTasks.size
-                    val dayLevel = if (dayTotal == 0) {
-                        0
-                    } else {
-                        val completed = dayTasks.count { it.isCompleted == 1 }
-                        val sr = (completed.toFloat() / dayTotal.toFloat()) * 100f
-                        when {
-                            sr == 0f -> 0
-                            sr < 33f -> 1
-                            sr < 66f -> 2
-                            sr < 100f -> 3
-                            else -> 4
+                if (item.span == 7) {
+                    // Active current week container spanning 7 columns with an outer border around all day squares
+                    val totalSpanWidth = (7 * cellSize) + (6 * spacing)
+                    val outerWeekRect = RectF(startX, 0f, startX + totalSpanWidth, cellSize)
+                    val dayWidth = totalSpanWidth / 7f
+
+                    // 1. Draw each individual day inside the active week container
+                    for (d in 1..7) {
+                        val dayTasks = currentWeekTasks.filter { it.dayOfWeek == d }
+                        val dayTotal = dayTasks.size
+                        val dayLevel = if (dayTotal == 0) {
+                            0
+                        } else {
+                            val completed = dayTasks.count { it.isCompleted == 1 }
+                            val sr = (completed.toFloat() / dayTotal.toFloat()) * 100f
+                            when {
+                                sr == 0f -> 0
+                                sr < 33f -> 1
+                                sr < 66f -> 2
+                                sr < 100f -> 3
+                                else -> 4
+                            }
                         }
+
+                        val dayLeft = startX + (d - 1) * dayWidth
+                        val dayRight = if (d == 7) outerWeekRect.right else (dayLeft + dayWidth)
+                        val dayTop = 0f
+                        val dayBottom = cellSize
+                        val dayRect = RectF(dayLeft, dayTop, dayRight, dayBottom)
+
+                        // Fill day background
+                        paint.color = levelColors[dayLevel]
+                        canvas.drawRect(dayRect, paint)
+
+                        // Inner day border
+                        val isToday = com.example.ui.Utils.isCellToday(inceptionTimestamp, currentWeekIndex, d)
+                        if (isToday) {
+                            borderPaint.color = Color.parseColor("#39FF14")
+                            borderPaint.strokeWidth = 2.5f
+                            canvas.drawRect(dayRect, borderPaint)
+                        } else {
+                            borderPaint.color = Color.parseColor("#27272A")
+                            borderPaint.strokeWidth = 1f
+                            canvas.drawRect(dayRect, borderPaint)
+                        }
+
+                        // Day of Month text with exact Monospace font
+                        val cal = Calendar.getInstance().apply {
+                            timeInMillis = inceptionTimestamp
+                            add(Calendar.WEEK_OF_YEAR, currentWeekIndex)
+                            add(Calendar.DAY_OF_YEAR, d - 1)
+                        }
+                        val dayNum = cal.get(Calendar.DAY_OF_MONTH).toString()
+                        textPaint.typeface = monoBold
+                        textPaint.textSize = 13.5f
+                        textPaint.color = if (isToday) {
+                            if (dayLevel == 4) Color.BLACK else Color.parseColor("#39FF14")
+                        } else if (dayLevel > 0) {
+                            Color.WHITE
+                        } else {
+                            Color.parseColor("#A1A1AA")
+                        }
+                        canvas.drawText(dayNum, dayRect.centerX(), dayRect.centerY() + 5f, textPaint)
                     }
 
-                    val left = (d - 1) * (daySubCellWidth + spacing)
-                    val right = left + daySubCellWidth
-                    val top = 2f
-                    val bottom = top + cellHeight
-                    val rect = RectF(left, top, right, bottom)
-
-                    // Draw day cell background
-                    paint.color = levelColors[dayLevel]
-                    canvas.drawRect(rect, paint)
-
-                    // Border (Neon green for Today)
-                    val isToday = com.example.ui.Utils.isCellToday(inceptionTimestamp, currentWeekIndex, d)
-                    if (isToday) {
-                        borderPaint.color = Color.parseColor("#39FF14")
-                        borderPaint.strokeWidth = 3f
-                    } else {
-                        borderPaint.color = Color.parseColor("#3F3F46")
-                        borderPaint.strokeWidth = 1.5f
+                    // 2. Draw outer framing border around all 7 day squares (matching in-app active week container)
+                    val outerBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        style = Paint.Style.STROKE
+                        color = Color.parseColor("#52525B")
+                        strokeWidth = 2f
                     }
-                    canvas.drawRect(rect, borderPaint)
-
-                    // Day Number (Clearly legible size matching app)
-                    val cal = Calendar.getInstance().apply {
-                        timeInMillis = inceptionTimestamp
-                        add(Calendar.WEEK_OF_YEAR, currentWeekIndex)
-                        add(Calendar.DAY_OF_YEAR, d - 1)
-                    }
-                    val dayNum = cal.get(Calendar.DAY_OF_MONTH).toString()
-                    textPaint.color = if (isToday) Color.parseColor("#39FF14") else if (dayLevel > 0) Color.WHITE else Color.parseColor("#A1A1AA")
-                    textPaint.textSize = 14f
-                    canvas.drawText(dayNum, rect.centerX(), rect.centerY() + 5f, textPaint)
-                }
-
-                matrixRowBitmaps.add(rowBitmap)
-                weekIdx++
-            } else {
-                // Standard row containing regular week squares
-                val countInRow = minOf(columns, totalWeeks - weekIdx)
-                // If the next items contain the current week, slice before it
-                val actualCount = if (currentWeekIndex in weekIdx until (weekIdx + countInRow)) {
-                    currentWeekIndex - weekIdx
+                    canvas.drawRect(outerWeekRect, outerBorderPaint)
                 } else {
-                    countInRow
-                }
+                    // Regular single week square
+                    val left = startX
+                    val top = 0f
+                    val rect = RectF(left, top, left + cellSize, top + cellSize)
 
-                for (col in 0 until actualCount) {
-                    val w = weekIdx + col
-                    val left = col * (cellWidth + spacing)
-                    val top = 2f
-                    val rect = RectF(left, top, left + cellWidth, top + cellHeight)
-
-                    val level = weekColors[w] ?: 0
+                    val level = weekColors[item.weekIdx] ?: 0
                     val isGoalDeadline = subGoals.isNotEmpty() && subGoals.any { sg ->
                         val targetWeekIdx = ((sg.startMonth + sg.durationMonths) * weeksPerMonth) - 1
-                        w == targetWeekIdx
+                        item.weekIdx == targetWeekIdx
                     }
 
                     val cellColor = when {
-                        isGoalDeadline -> Color.parseColor("#27272A")
+                        isGoalDeadline -> Color.parseColor("#222222")
                         level in 0..4 -> levelColors[level]
                         else -> levelColors[0]
                     }
 
-                    // Background
+                    // Fill background
                     paint.color = cellColor
                     canvas.drawRect(rect, paint)
 
-                    // Border
+                    // Draw Border
                     if (isGoalDeadline) {
-                        borderPaint.color = Color.parseColor("#FFFFFF")
-                        borderPaint.strokeWidth = 2.5f
+                        borderPaint.color = Color.WHITE
+                        borderPaint.strokeWidth = 1.8f
                     } else {
-                        borderPaint.color = Color.parseColor("#27272A")
-                        borderPaint.strokeWidth = 1.2f
+                        borderPaint.color = Color.argb(38, 255, 255, 255) // Primary alpha 0.15f
+                        borderPaint.strokeWidth = 1f
                     }
                     canvas.drawRect(rect, borderPaint)
 
-                    // Week Number (Large, high-contrast, perfectly legible)
-                    textPaint.color = if (isGoalDeadline || level > 0) Color.WHITE else Color.parseColor("#71717A")
-                    textPaint.textSize = 15f
-                    val weekNumStr = (w + 1).toString()
-                    canvas.drawText(weekNumStr, rect.centerX(), rect.centerY() + 5.5f, textPaint)
+                    // Draw Week Number with exact Monospace font
+                    textPaint.typeface = if (isGoalDeadline || level > 0) monoBold else monoNormal
+                    textPaint.textSize = 13f
+                    textPaint.color = if (isGoalDeadline || level > 0) Color.WHITE else Color.argb(130, 255, 255, 255)
+                    val weekNumStr = (item.weekIdx + 1).toString()
+                    canvas.drawText(weekNumStr, rect.centerX(), rect.centerY() + 4.8f, textPaint)
                 }
-
-                matrixRowBitmaps.add(rowBitmap)
-                weekIdx += actualCount
             }
+
+            matrixRowBitmaps.add(rowBitmap)
         }
     }
 

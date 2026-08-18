@@ -10,7 +10,7 @@
     android:paddingRight="14dp"
     android:paddingBottom="12dp">
 
-    <!-- Header Text: Micro timline matrix (540 week) -->
+    <!-- Header Text: MACRO TIMELINE MATRIX (540 WEEKS) -->
     <TextView
         android:id="@+id/matrix_widget_title"
         android:layout_width="match_parent"
@@ -19,9 +19,9 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:singleLine="true"
-        android:text="Micro timline matrix (540 week)"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
+        android:text="MACRO TIMELINE MATRIX (540 WEEKS)"
+        android:textColor="#A1A1AA"
+        android:textSize="11sp"
         android:textStyle="bold"
         android:typeface="monospace" />
 
@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:divider="@android:color/transparent"
-            android:dividerHeight="6dp"
+            android:dividerHeight="0dp"
             android:scrollbars="none" />
 
         <!-- Empty State -->

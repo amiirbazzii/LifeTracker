@@ -77,7 +77,7 @@ class GoalMatrixWidgetProvider : AppWidgetProvider() {
                     val dao = db.timelineDao()
                     val meta = dao.getTimelineMeta().firstOrNull()
                     val totalWeeks = meta?.totalWeeks ?: 540
-                    views.setTextViewText(R.id.matrix_widget_title, "Micro timline matrix ($totalWeeks week)")
+                    views.setTextViewText(R.id.matrix_widget_title, "MACRO TIMELINE MATRIX ($totalWeeks WEEKS)")
                     appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
                 } catch (e: Exception) {
                     e.printStackTrace()
