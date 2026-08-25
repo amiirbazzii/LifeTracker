@@ -40,15 +40,26 @@ fun ObjectiveTab(
 ) {
     val totalMonthLimit = targetYears * 12
     var mainGoalInput by remember(currentGoal) { mutableStateOf(currentGoal) }
-    var subGoalTitleInput by remember { mutableStateOf("") }
-    var subGoalDurationInput by remember { mutableStateOf("") }
-    var formErrorMessage by remember { mutableStateOf<String?>(null) }
+    var showAddSubGoalDialog by remember { mutableStateOf(false) }
 
     // Dialog state for editing/deleting items
     var editingSubGoal by remember { mutableStateOf<SubGoal?>(null) }
     var showEditMainGoalDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+
+    val sortedSubGoals = remember(subGoals) {
+        subGoals.sortedWith(compareBy({ it.durationMonths }, { it.createdTimestamp }))
+    }
+    val groupedSubGoals = remember(sortedSubGoals) {
+        sortedSubGoals.groupBy { it.durationMonths }
+    }
+
+    fun cleanGoalTitle(title: String): String {
+        return title.replace(Regex("^(?i)goal\\s*\\d*\\s*:\\s*", setOf(RegexOption.IGNORE_CASE)), "")
+            .replace(Regex("^\\d+\\s*:\\s*"), "")
+            .trim()
+    }
 
     Column(
         modifier = modifier
@@ -258,143 +269,34 @@ fun ObjectiveTab(
                 )
             }
 
-            // --- 3. SUB-GOAL CREATION FORM ---
-            Box(
+            // --- 3. SUB-GOAL REGISTRATION BUTTON ---
+            Button(
+                onClick = { showAddSubGoalDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        DesignTokens.StrokeMedium,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        RoundedCornerShape(DesignTokens.PaddingZero)
-                    )
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(DesignTokens.PaddingMedium)
-                    .testTag("sub_goal_creation_form")
+                    .height(DesignTokens.ButtonHeight)
+                    .testTag("add_sub_goal_button"),
+                shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Sub Goal",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
                     Text(
                         text = "ADD SUB-GOAL",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace,
                             letterSpacing = DesignTokens.LetterSpacingWide
                         )
                     )
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-
-                    // Field 1: Goal Title
-                    OutlinedTextField(
-                        value = subGoalTitleInput,
-                        onValueChange = {
-                            subGoalTitleInput = it
-                            formErrorMessage = null
-                        },
-                        label = {
-                            Text("Goal Title", fontFamily = FontFamily.Monospace)
-                        },
-                        placeholder = {
-                            Text("e.g., Learn Jetpack Compose", fontFamily = FontFamily.Monospace, color = Zinc500)
-                        },
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("sub_goal_title_input"),
-                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-
-                    // Field 2: Duration in Months
-                    OutlinedTextField(
-                        value = subGoalDurationInput,
-                        onValueChange = {
-                            subGoalDurationInput = it
-                            formErrorMessage = null
-                        },
-                        label = {
-                            Text("Duration in months", fontFamily = FontFamily.Monospace)
-                        },
-                        placeholder = {
-                            Text("e.g., 6 (max $totalMonthLimit)", fontFamily = FontFamily.Monospace, color = Zinc500)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("sub_goal_duration_input"),
-                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                        singleLine = true
-                    )
-
-                    // Form Validation Error Message
-                    formErrorMessage?.let { errorMsg ->
-                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
-                        Text(
-                            text = "⚠ $errorMsg",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.testTag("sub_goal_form_error")
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
-
-                    Button(
-                        onClick = {
-                            val title = subGoalTitleInput.trim()
-                            val duration = subGoalDurationInput.toIntOrNull()
-
-                            if (title.isBlank()) {
-                                formErrorMessage = "Goal Title cannot be empty."
-                            } else if (duration == null || duration <= 0) {
-                                formErrorMessage = "Duration must be a positive number of months."
-                            } else if (duration > totalMonthLimit) {
-                                formErrorMessage = "Duration ($duration months) exceeds main goal limit ($totalMonthLimit months)."
-                            } else {
-                                onCreateSubGoal(title, duration)
-                                subGoalTitleInput = ""
-                                subGoalDurationInput = ""
-                                formErrorMessage = null
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(DesignTokens.ButtonHeight)
-                            .testTag("add_sub_goal_button"),
-                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add Sub Goal",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
-                            Text(
-                                text = "ADD SUB-GOAL",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            )
-                        }
-                    }
                 }
             }
 
@@ -438,82 +340,85 @@ fun ObjectiveTab(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(DesignTokens.PaddingSmall)
                 ) {
-                    subGoals.forEachIndexed { index, subGoal ->
-                        val startMonth = subGoal.startMonth
-                        val endMonth = startMonth + subGoal.durationMonths
-                        val weeksPerMonth = (targetYears * 52).toDouble() / (targetYears * 12.0)
-                        val startWeek = (startMonth * weeksPerMonth).toInt() + 1
-                        val endWeek = (endMonth * weeksPerMonth).toInt()
+                    val weeksPerMonth = (targetYears * 52).toDouble() / (targetYears * 12.0)
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Tree connector stem label
-                            Text(
-                                text = if (index == subGoals.size - 1) "└── " else "├── ",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    color = GridLevel4
-                                )
-                            )
+                    groupedSubGoals.forEach { (durationMonths, groupGoals) ->
+                        val endWeek = (durationMonths * weeksPerMonth).toInt()
 
-                            // Sub-Goal Card
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .border(
-                                        DesignTokens.StrokeMedium,
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                        RoundedCornerShape(DesignTokens.PaddingZero)
-                                    )
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .clickable { editingSubGoal = subGoal }
-                                    .padding(DesignTokens.PaddingMedium)
-                                    .testTag("sub_goal_card_${subGoal.id}")
+                        // Sub-Goals within this timeframe
+                        groupGoals.forEachIndexed { itemIndex, subGoal ->
+                            val isLastInGroup = itemIndex == groupGoals.size - 1
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                // Tree connector stem label
+                                Text(
+                                    text = if (isLastInGroup) "└── " else "├── ",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        color = GridLevel4
+                                    )
+                                )
+
+                                // Sub-Goal Card
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .border(
+                                            DesignTokens.StrokeMedium,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                            RoundedCornerShape(DesignTokens.PaddingZero)
+                                        )
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .clickable { editingSubGoal = subGoal }
+                                        .padding(DesignTokens.PaddingMedium)
+                                        .testTag("sub_goal_card_${subGoal.id}")
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = subGoal.title.uppercase(),
-                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = "MONTH $startMonth - $endMonth  •  WEEKS $startWeek - $endWeek",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                color = Zinc500,
-                                                fontSize = 11.sp
-                                            )
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
-
-                                    Box(
-                                        modifier = Modifier
-                                            .background(GridLevel4)
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            text = "${subGoal.durationMonths} MOS",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontWeight = FontWeight.Black,
-                                                color = MonochromeBlack,
-                                                fontSize = 10.sp
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = cleanGoalTitle(subGoal.title).uppercase(),
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
                                             )
-                                        )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "TARGET: $durationMonths ${if (durationMonths == 1) "MONTH" else "MONTHS"}  •  WEEKS 1 - $endWeek",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    color = Zinc500,
+                                                    fontSize = 11.sp
+                                                )
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(DesignTokens.PaddingSmall))
+
+                                        Box(
+                                            modifier = Modifier
+                                                .background(GridLevel4)
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "${subGoal.durationMonths} MOS",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = MonochromeBlack,
+                                                    fontSize = 10.sp
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -687,6 +592,118 @@ fun ObjectiveTab(
             },
             dismissButton = {
                 TextButton(onClick = { editingSubGoal = null }) {
+                    Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
+                }
+            }
+        )
+    }
+
+    // --- REGISTER SUB-GOAL MODAL DIALOG ---
+    if (showAddSubGoalDialog) {
+        var addTitleInput by remember { mutableStateOf("") }
+        var addDurationInput by remember { mutableStateOf("") }
+        var addErrorMsg by remember { mutableStateOf<String?>(null) }
+
+        AlertDialog(
+            onDismissRequest = { showAddSubGoalDialog = false },
+            shape = RoundedCornerShape(DesignTokens.PaddingZero),
+            title = {
+                Text(
+                    text = "REGISTER SUB-GOAL",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Specify a sub-goal title and target duration in months from start (e.g., 1 mo, 2 mos, 3 mos).",
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        color = Zinc500
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.PaddingMedium))
+
+                    // Goal Title
+                    OutlinedTextField(
+                        value = addTitleInput,
+                        onValueChange = {
+                            addTitleInput = it
+                            addErrorMsg = null
+                        },
+                        label = { Text("Goal Title", fontFamily = FontFamily.Monospace) },
+                        placeholder = {
+                            Text("e.g., Learn Jetpack Compose", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("sub_goal_title_input"),
+                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+
+                    // Duration in Months
+                    OutlinedTextField(
+                        value = addDurationInput,
+                        onValueChange = {
+                            addDurationInput = it
+                            addErrorMsg = null
+                        },
+                        label = { Text("Duration in months", fontFamily = FontFamily.Monospace) },
+                        placeholder = {
+                            Text("e.g., 1 (max $totalMonthLimit)", fontFamily = FontFamily.Monospace, color = Zinc500)
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("sub_goal_duration_input"),
+                        shape = RoundedCornerShape(DesignTokens.PaddingZero),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                        singleLine = true
+                    )
+
+                    addErrorMsg?.let { error ->
+                        Spacer(modifier = Modifier.height(DesignTokens.PaddingSmall))
+                        Text(
+                            text = "⚠ $error",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.testTag("sub_goal_form_error")
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val title = addTitleInput.trim()
+                        val duration = addDurationInput.toIntOrNull()
+
+                        if (title.isBlank()) {
+                            addErrorMsg = "Goal Title cannot be empty."
+                        } else if (duration == null || duration <= 0) {
+                            addErrorMsg = "Duration must be a positive number of months."
+                        } else if (duration > totalMonthLimit) {
+                            addErrorMsg = "Duration ($duration months) exceeds main goal limit ($totalMonthLimit months)."
+                        } else {
+                            onCreateSubGoal(title, duration)
+                            showAddSubGoalDialog = false
+                        }
+                    },
+                    modifier = Modifier.testTag("confirm_add_sub_goal_button")
+                ) {
+                    Text("REGISTER", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddSubGoalDialog = false }) {
                     Text("CANCEL", fontFamily = FontFamily.Monospace, color = Zinc500)
                 }
             }

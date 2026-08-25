@@ -135,13 +135,11 @@ class LifeTrackerViewModel(
 
     fun onCreateSubGoal(title: String, durationMonths: Int) {
         viewModelScope.launch(ioDispatcher) {
-            val currentSubGoals = repository.allSubGoals.first()
-            val nextStartMonth = currentSubGoals.sumOf { it.durationMonths }
             val subGoal = SubGoal(
                 id = UUID.randomUUID().toString(),
                 title = title,
                 durationMonths = durationMonths,
-                startMonth = nextStartMonth,
+                startMonth = 0,
                 createdTimestamp = System.currentTimeMillis()
             )
             repository.insertSubGoal(subGoal)
@@ -154,9 +152,9 @@ class LifeTrackerViewModel(
             val currentSubGoals = repository.allSubGoals.first()
             val existing = currentSubGoals.find { it.id == subGoalId }
             if (existing != null) {
-                val updated = existing.copy(title = newTitle, durationMonths = newDurationMonths)
+                val updated = existing.copy(title = newTitle, durationMonths = newDurationMonths, startMonth = 0)
                 repository.updateSubGoal(updated)
-                recalculateSubGoalStartMonths()
+                showToast("Sub-goal updated")
             }
         }
     }
@@ -164,18 +162,7 @@ class LifeTrackerViewModel(
     fun onDeleteSubGoal(subGoalId: String) {
         viewModelScope.launch(ioDispatcher) {
             repository.deleteSubGoal(subGoalId)
-            recalculateSubGoalStartMonths()
-        }
-    }
-
-    private suspend fun recalculateSubGoalStartMonths() {
-        val currentSubGoals = repository.allSubGoals.first()
-        var cumulativeMonth = 0
-        currentSubGoals.forEach { sg ->
-            if (sg.startMonth != cumulativeMonth) {
-                repository.updateSubGoal(sg.copy(startMonth = cumulativeMonth))
-            }
-            cumulativeMonth += sg.durationMonths
+            showToast("Sub-goal deleted")
         }
     }
 

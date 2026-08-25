@@ -80,22 +80,31 @@ fun DashboardScreen(
     var selectedRoutine by remember { mutableStateOf<Routine?>(null) }
     var activeRoutineIdForMilestoneVerification by remember { mutableStateOf<String?>(null) }
     var activeTaskForTimer by remember { mutableStateOf<DailyTask?>(null) }
-    var revealedGoal by remember { mutableStateOf<SubGoal?>(null) }
-
-    // Helper function to find assigned subgoal for a given week index
-    fun getGoalForWeekIndex(weekIdx: Int): SubGoal? {
-        if (subGoals.isEmpty()) return null
-        val weeksPerMonth = state.meta.totalWeeks.toDouble() / (state.meta.targetYears * 12.0)
-        return subGoals.find { sg ->
-            val startW = (sg.startMonth * weeksPerMonth).toInt()
-            val endW = ((sg.startMonth + sg.durationMonths) * weeksPerMonth).toInt() - 1
-            weekIdx in startW..endW
-        }
+    val sortedSubGoals = remember(subGoals) {
+        subGoals.sortedWith(compareBy({ it.durationMonths }, { it.createdTimestamp }))
+    }
+    val groupedSubGoals = remember(sortedSubGoals) {
+        sortedSubGoals.groupBy { it.durationMonths }
     }
 
-    // Auto update revealedGoal whenever selectedWeekIndex changes
+    // Helper function to find assigned subgoals for a given week index
+    fun getGoalsForWeekIndex(weekIdx: Int): List<SubGoal> {
+        if (subGoals.isEmpty()) return emptyList()
+        val weeksPerMonth = state.meta.totalWeeks.toDouble() / (state.meta.targetYears * 12.0)
+        // Find the first group whose deadline (endW) has not passed
+        val activeGroupDuration = groupedSubGoals.keys.firstOrNull { durationMonths ->
+            val endW = (durationMonths * weeksPerMonth).toInt()
+            weekIdx < endW
+        }
+
+        return if (activeGroupDuration != null) groupedSubGoals[activeGroupDuration] ?: emptyList() else emptyList()
+    }
+
+    var activeSubGoals by remember { mutableStateOf<List<SubGoal>>(emptyList()) }
+
+    // Auto update activeSubGoals whenever selectedWeekIndex changes
     LaunchedEffect(state.selectedWeekIndex, subGoals) {
-        revealedGoal = getGoalForWeekIndex(state.selectedWeekIndex)
+        activeSubGoals = getGoalsForWeekIndex(state.selectedWeekIndex)
     }
 
     LaunchedEffect(state.selectedWeekIndex) {
@@ -153,14 +162,17 @@ fun DashboardScreen(
     ) {
         // App Goal Banner (Hides completely when input is focused)
         if (!isInputFocused) {
-            val headerLabel = revealedGoal?.let { "Your next ${it.durationMonths} month goal" }
-            val goalTitle = revealedGoal?.title
+            val targetDuration = activeSubGoals.firstOrNull()?.durationMonths
+            val headerLabel = if (targetDuration != null) {
+                "Your next $targetDuration month ${if (targetDuration == 1) "goal" else "goals"}"
+            } else null
+
             BaseSystemHeader(
                 mode = SystemHeaderMode.DASHBOARD,
                 targetYears = state.meta.targetYears,
                 userGoal = userGoal,
                 headerLabelOverride = headerLabel,
-                goalTitleOverride = goalTitle,
+                activeSubGoals = activeSubGoals,
                 onEditGoalClick = onEditGoalClick
             )
         }
@@ -183,10 +195,7 @@ fun DashboardScreen(
                         subGoals = subGoals,
                         onSelectWeek = { weekIdx ->
                             onSelectWeek(weekIdx)
-                            val assigned = getGoalForWeekIndex(weekIdx)
-                            if (assigned != null) {
-                                revealedGoal = assigned
-                            }
+                            activeSubGoals = getGoalsForWeekIndex(weekIdx)
                         },
                         onSelectDay = { d -> taskDayOfWeek = d }
                     )
@@ -1159,9 +1168,9 @@ fun MacroTimelineMatrix(
 
                         val isGoalDeadlineWeek = remember(subGoals, state.meta, weekIdx) {
                             if (subGoals.isEmpty()) false else {
-                                val weeksPerMonth = 4
+                                val weeksPerMonth = state.meta.totalWeeks.toDouble() / (state.meta.targetYears * 12.0)
                                 subGoals.any { sg ->
-                                    val targetWeekIdx = ((sg.startMonth + sg.durationMonths) * weeksPerMonth) - 1
+                                    val targetWeekIdx = ((sg.durationMonths) * weeksPerMonth).toInt() - 1
                                     weekIdx == targetWeekIdx
                                 }
                             }

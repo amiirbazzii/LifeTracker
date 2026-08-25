@@ -254,7 +254,7 @@ class GoalMatrixRemoteViewsFactory(
 
                     val level = weekColors[item.weekIdx] ?: 0
                     val isGoalDeadline = subGoals.isNotEmpty() && subGoals.any { sg ->
-                        val targetWeekIdx = ((sg.startMonth + sg.durationMonths) * weeksPerMonth) - 1
+                        val targetWeekIdx = ((sg.durationMonths) * weeksPerMonth).toInt() - 1
                         item.weekIdx == targetWeekIdx
                     }
 

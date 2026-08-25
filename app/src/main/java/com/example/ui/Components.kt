@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.DailyTask
 import com.example.data.Category
 import com.example.data.Routine
+import com.example.data.SubGoal
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -66,6 +67,7 @@ fun BaseSystemHeader(
     userGoal: String = "",
     headerLabelOverride: String? = null,
     goalTitleOverride: String? = null,
+    activeSubGoals: List<SubGoal> = emptyList(),
     onEditGoalClick: () -> Unit = {},
     activeSectionTitle: String = "",
     userPoints: Int = 0,
@@ -98,7 +100,7 @@ fun BaseSystemHeader(
                 val currentGoalTitle = goalTitleOverride ?: userGoal
 
                 AnimatedContent(
-                    targetState = Pair(currentHeaderLabel, currentGoalTitle),
+                    targetState = Triple(currentHeaderLabel, currentGoalTitle, activeSubGoals),
                     transitionSpec = {
                         fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
                     },
@@ -106,7 +108,7 @@ fun BaseSystemHeader(
                         .weight(1f)
                         .padding(end = DesignTokens.PaddingLarge),
                     label = "GoalHeaderAnimation"
-                ) { (label, title) ->
+                ) { (label, title, subGoalsList) ->
                     Column {
                         Text(
                             text = label,
@@ -119,30 +121,65 @@ fun BaseSystemHeader(
                             ),
                             modifier = Modifier.padding(bottom = 2.dp)
                         )
-                        val goalTextToShow = if (title.isBlank()) {
-                            "> TAP TO SET YOUR ULTIMATE GOAL"
+                        if (subGoalsList.isNotEmpty()) {
+                            fun cleanTitle(title: String) = title
+                                .replace(Regex("^(?i)goal\\s*\\d*\\s*:\\s*", setOf(RegexOption.IGNORE_CASE)), "")
+                                .replace(Regex("^\\d+\\s*:\\s*"), "")
+                                .trim()
+
+                            val combinedGoalsText = if (subGoalsList.size == 1) {
+                                cleanTitle(subGoalsList[0].title).uppercase()
+                            } else {
+                                subGoalsList.mapIndexed { idx, sg ->
+                                    "${idx + 1}: ${cleanTitle(sg.title).uppercase()}"
+                                }.joinToString(", ")
+                            }
+
+                            Text(
+                                text = combinedGoalsText,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 18.sp,
+                                    letterSpacing = DesignTokens.LetterSpacingWide,
+                                    color = primaryLabelColor
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .basicMarquee(
+                                        iterations = Int.MAX_VALUE,
+                                        initialDelayMillis = 1000,
+                                        velocity = 20.dp
+                                    )
+                            )
                         } else {
-                            title
+                            val goalTextToShow = if (title.isBlank()) {
+                                "> TAP TO SET YOUR ULTIMATE GOAL"
+                            } else {
+                                title
+                            }
+                            Text(
+                                text = goalTextToShow,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 18.sp,
+                                    letterSpacing = DesignTokens.LetterSpacingWide,
+                                    color = if (title.isBlank()) GridLevel4 else primaryLabelColor
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .basicMarquee(
+                                        iterations = Int.MAX_VALUE,
+                                        initialDelayMillis = 1000,
+                                        velocity = 20.dp
+                                    )
+                            )
                         }
-                        Text(
-                            text = goalTextToShow,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 18.sp,
-                                letterSpacing = DesignTokens.LetterSpacingWide,
-                                color = if (title.isBlank()) GridLevel4 else primaryLabelColor
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Clip,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .basicMarquee(
-                                    iterations = Int.MAX_VALUE,
-                                    initialDelayMillis = 1000,
-                                    velocity = 20.dp
-                                )
-                        )
                     }
                 }
 
