@@ -206,61 +206,110 @@ class LifeTrackerViewModelTest {
   }
 
   @Test
-  fun testCreateRoutineAndDailyAutoInjection() = runTest(testDispatcher) {
+  fun testCreateHabitAndDailyAutoInjection() = runTest(testDispatcher) {
     // Initialize timeline first
     viewModel.initializeTimeline(25, "Build Life Mastery")
 
-    // Create routine
-    viewModel.onCreateRoutine("", "Morning Meditation", 30)
+    // Create habit
+    viewModel.onCreateHabit("Morning Meditation")
 
-    val routinesFromDb = db.timelineDao().getAllRoutines().first()
-    val routine = routinesFromDb.find { it.title == "Morning Meditation" }
-    assertNotNull(routine)
+    val habitsFromDb = db.timelineDao().getAllDailyHabits().first()
+    val habit = habitsFromDb.find { it.title == "Morning Meditation" }
+    assertNotNull(habit)
 
     // Verify task is injected for today
     val tasksFromDb = db.timelineDao().getAllTasks().first()
-    val injectedTask = tasksFromDb.find { it.routineId == routine?.id }
+    val injectedTask = tasksFromDb.find { it.habitId == habit?.id }
     assertNotNull(injectedTask)
     assertEquals("Morning Meditation", injectedTask?.taskTitle)
     assertEquals(0, injectedTask?.isCompleted)
 
-    // Toggling the injected task completes it and awards 15 points
+    // Toggling the injected task completes it and awards 10 points
     viewModel.toggleTaskCompletion(injectedTask!!)
-    assertEquals(15, viewModel.userPoints.value)
+    assertEquals(10, viewModel.userPoints.value)
 
     val updatedTask = db.timelineDao().getAllTasks().first().find { it.taskId == injectedTask.taskId }
     assertEquals(1, updatedTask?.isCompleted)
   }
 
   @Test
-  fun testUpdateRoutineUpdatesUncompletedDailyTasks() = runTest(testDispatcher) {
+  fun testUpdateHabitUpdatesUncompletedDailyTasks() = runTest(testDispatcher) {
     viewModel.initializeTimeline(25, "Mastery")
-    viewModel.onCreateRoutine("", "Read Books", 10)
+    viewModel.onCreateHabit("Read Books")
 
-    val routine = db.timelineDao().getAllRoutines().first().find { it.title == "Read Books" }!!
-    viewModel.onUpdateRoutine(routine.id, "Read 30 Pages", 15)
+    val habit = db.timelineDao().getAllDailyHabits().first().find { it.title == "Read Books" }!!
+    viewModel.onUpdateHabit(habit.id, "Read 30 Pages")
 
-    val updatedRoutine = db.timelineDao().getAllRoutines().first().find { it.id == routine.id }
-    assertEquals("Read 30 Pages", updatedRoutine?.title)
-    assertEquals(15, updatedRoutine?.targetCount)
+    val updatedHabit = db.timelineDao().getAllDailyHabits().first().find { it.id == habit.id }
+    assertEquals("Read 30 Pages", updatedHabit?.title)
 
     val tasks = db.timelineDao().getAllTasks().first()
-    val task = tasks.find { it.routineId == routine.id }
+    val task = tasks.find { it.habitId == habit.id }
     assertEquals("Read 30 Pages", task?.taskTitle)
   }
 
   @Test
-  fun testDeleteRoutineCleansUpUncompletedDailyTasks() = runTest(testDispatcher) {
+  fun testDeleteHabitCleansUpUncompletedDailyTasks() = runTest(testDispatcher) {
     viewModel.initializeTimeline(25, "Mastery")
-    viewModel.onCreateRoutine("", "Morning Stretch", 10)
+    viewModel.onCreateHabit("Morning Stretch")
 
-    val routine = db.timelineDao().getAllRoutines().first().find { it.title == "Morning Stretch" }!!
-    viewModel.onDeleteRoutine(routine.id)
+    val habit = db.timelineDao().getAllDailyHabits().first().find { it.title == "Morning Stretch" }!!
+    viewModel.onDeleteHabit(habit.id)
 
-    val routines = db.timelineDao().getAllRoutines().first()
-    assertEquals(null, routines.find { it.id == routine.id })
+    val habits = db.timelineDao().getAllDailyHabits().first()
+    assertEquals(null, habits.find { it.id == habit.id })
 
     val tasks = db.timelineDao().getAllTasks().first()
-    assertEquals(null, tasks.find { it.routineId == routine.id })
+    assertEquals(null, tasks.find { it.habitId == habit.id })
+  }
+
+  @Test
+  fun testTaskTimerUpdateAndSorting() = runTest(testDispatcher) {
+    val task1 = DailyTask(
+      taskId = "task_no_time",
+      weekIndex = 0,
+      dayOfWeek = 1,
+      taskTitle = "No Time Task",
+      isCompleted = 0,
+      createdTimestamp = 1000L
+    )
+    val task2 = DailyTask(
+      taskId = "task_late_time",
+      weekIndex = 0,
+      dayOfWeek = 1,
+      taskTitle = "Late Task",
+      isCompleted = 0,
+      createdTimestamp = 2000L,
+      startTime = "14:00",
+      endTime = "15:00"
+    )
+    val task3 = DailyTask(
+      taskId = "task_early_time",
+      weekIndex = 0,
+      dayOfWeek = 1,
+      taskTitle = "Early Task",
+      isCompleted = 0,
+      createdTimestamp = 3000L,
+      startTime = "09:00",
+      endTime = "10:00"
+    )
+
+    db.timelineDao().insertTask(task1)
+    db.timelineDao().insertTask(task2)
+    db.timelineDao().insertTask(task3)
+
+    // Test sortedWithTimeOrder
+    val unsortedList = listOf(task1, task2, task3)
+    val sortedList = unsortedList.sortedWithTimeOrder()
+
+    assertEquals("task_early_time", sortedList[0].taskId)
+    assertEquals("task_late_time", sortedList[1].taskId)
+    assertEquals("task_no_time", sortedList[2].taskId)
+
+    // Test updateTaskTimer
+    viewModel.updateTaskTimer(task1, "08:00", "08:30")
+    val updatedTask1 = db.timelineDao().getAllTasks().first().find { it.taskId == "task_no_time" }
+    assertEquals("08:00", updatedTask1?.startTime)
+    assertEquals("08:30", updatedTask1?.endTime)
   }
 }

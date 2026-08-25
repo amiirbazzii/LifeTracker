@@ -31,5 +31,26 @@ data class DailyTask(
     val routineId: String? = null,
 
     @ColumnInfo(name = "habit_id")
-    val habitId: String? = null
+    val habitId: String? = null,
+
+    @ColumnInfo(name = "start_time")
+    val startTime: String? = null, // "HH:mm" e.g. "09:00"
+
+    @ColumnInfo(name = "end_time")
+    val endTime: String? = null // "HH:mm" e.g. "10:30"
 )
+
+fun List<DailyTask>.sortedWithTimeOrder(): List<DailyTask> {
+    return this.sortedWith(
+        compareBy<DailyTask> { task ->
+            if (!task.startTime.isNullOrBlank()) 0 else 1
+        }.thenBy { task ->
+            task.startTime ?: "99:99"
+        }.thenBy { task ->
+            task.endTime ?: "99:99"
+        }.thenByDescending { task ->
+            task.createdTimestamp
+        }
+    )
+}
+

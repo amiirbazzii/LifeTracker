@@ -463,11 +463,46 @@ class LifeTrackerViewModel(
         }
     }
 
+    fun updateTaskTimer(task: DailyTask, startTime: String?, endTime: String?) {
+        viewModelScope.launch(ioDispatcher) {
+            val updated = task.copy(startTime = startTime, endTime = endTime)
+            repository.updateTask(updated)
+
+            val meta = repository.timelineMeta.first()
+            if (meta != null) {
+                if (!startTime.isNullOrBlank()) {
+                    val scheduled = com.example.util.TaskNotificationScheduler.scheduleTaskNotification(application, meta, updated)
+                    if (scheduled) {
+                        val endMsg = if (!endTime.isNullOrBlank()) " - $endTime" else ""
+                        showToast("⏰ Alarm set for $startTime$endMsg")
+                    } else {
+                        showToast("Timer saved: $startTime")
+                    }
+                } else {
+                    com.example.util.TaskNotificationScheduler.cancelTaskNotification(application, task.taskId)
+                    showToast("Timer removed")
+                }
+            }
+
+            com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
+            com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)
+        }
+    }
+
     fun toggleTaskCompletion(task: DailyTask) {
         viewModelScope.launch(ioDispatcher) {
             val willBeCompleted = task.isCompleted == 0
             val updated = task.copy(isCompleted = if (willBeCompleted) 1 else 0)
             repository.updateTask(updated)
+
+            val meta = repository.timelineMeta.first()
+            if (meta != null) {
+                if (willBeCompleted) {
+                    com.example.util.TaskNotificationScheduler.cancelTaskNotification(application, task.taskId)
+                } else if (!task.startTime.isNullOrBlank()) {
+                    com.example.util.TaskNotificationScheduler.scheduleTaskNotification(application, meta, updated)
+                }
+            }
             
             val pointsDiff = if (task.routineId != null) 15 else 10
             if (willBeCompleted) {
@@ -486,6 +521,7 @@ class LifeTrackerViewModel(
 
     fun deleteTask(taskId: String) {
         viewModelScope.launch(ioDispatcher) {
+            com.example.util.TaskNotificationScheduler.cancelTaskNotification(application, taskId)
             repository.deleteTask(taskId)
             com.example.widget.TodayTasksWidgetProvider.refreshAllWidgets(application)
             com.example.widget.GoalMatrixWidgetProvider.refreshAllWidgets(application)

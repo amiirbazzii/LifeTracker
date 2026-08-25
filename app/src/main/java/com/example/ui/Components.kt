@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -418,12 +419,14 @@ fun TaskItemRowComponent(
     onToggle: (DailyTask) -> Unit,
     onDelete: (String) -> Unit,
     categories: List<Category> = emptyList(),
-    routines: List<Routine> = emptyList()
+    routines: List<Routine> = emptyList(),
+    onOpenTimerDialog: (DailyTask) -> Unit = {}
 ) {
     val isCompleted = task.isCompleted == 1
     val isDark = isSystemInDarkTheme()
     val isRecurring = task.habitId != null || task.routineId != null
     val hasRoutine = task.routineId != null
+    val hasTimer = !task.startTime.isNullOrBlank() && !task.endTime.isNullOrBlank()
 
     val routine = remember(task.routineId, routines) {
         routines.find { it.id == task.routineId }
@@ -553,39 +556,91 @@ fun TaskItemRowComponent(
                     )
                 }
 
-                if (hasRoutine && routine != null) {
+                if (hasTimer || (hasRoutine && routine != null)) {
                     Spacer(modifier = Modifier.height(2.dp))
-                    val catName = category?.name?.uppercase() ?: "SYS"
-                    val routineName = routine.title.uppercase()
-
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)
-                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                            )
-                            .border(
-                                DesignTokens.StrokeThin,
-                                if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
-                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                RoundedCornerShape(DesignTokens.PaddingZero)
-                            )
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = "[$catName // $routineName]",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 8.sp,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else GridLevel4
-                            )
-                        )
+                        if (hasTimer) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)
+                                        else GridLevel4.copy(alpha = 0.15f)
+                                    )
+                                    .border(
+                                        DesignTokens.StrokeThin,
+                                        if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
+                                        else GridLevel4,
+                                        RoundedCornerShape(DesignTokens.PaddingZero)
+                                    )
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = "⏰ ${task.startTime} - ${task.endTime}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 8.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Black,
+                                        color = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f) else GridLevel4
+                                    )
+                                )
+                            }
+                        }
+
+                        if (hasRoutine && routine != null) {
+                            val catName = category?.name?.uppercase() ?: "SYS"
+                            val routineName = routine.title.uppercase()
+
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)
+                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                                    )
+                                    .border(
+                                        DesignTokens.StrokeThin,
+                                        if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
+                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                        RoundedCornerShape(DesignTokens.PaddingZero)
+                                    )
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = "[$catName // $routineName]",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 8.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else GridLevel4
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
 
             if (!isReadOnly) {
+                // Clock / Timer Button
+                Box(
+                    modifier = Modifier
+                        .size(DesignTokens.PaddingExtraLarge)
+                        .clickable { onOpenTimerDialog(task) }
+                        .testTag("timer_button_${task.taskId}"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⏰",
+                        fontSize = 13.sp,
+                        modifier = Modifier.alpha(if (hasTimer) 1f else 0.45f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(2.dp))
+
+                // Delete (Cross) Button
                 Box(
                     modifier = Modifier
                         .size(DesignTokens.PaddingExtraLarge)

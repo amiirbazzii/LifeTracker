@@ -48,6 +48,7 @@ import com.example.data.DailyTask
 import com.example.data.Category
 import com.example.data.Routine
 import com.example.data.SubGoal
+import com.example.data.sortedWithTimeOrder
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -66,7 +67,8 @@ fun DashboardScreen(
     onToggleTask: (DailyTask) -> Unit,
     onDeleteTask: (String) -> Unit,
     onReset: () -> Unit,
-    onIncrementRoutineCompletion: (String) -> Unit = {}
+    onIncrementRoutineCompletion: (String) -> Unit = {},
+    onUpdateTaskTimer: (DailyTask, String?, String?) -> Unit = { _, _, _ -> }
 ) {
     val currentDayOfWeekIndex = remember(state.meta.inceptionTimestamp, state.currentWeekIndex) {
         Utils.getTodayDayIndex(state.meta.inceptionTimestamp, state.currentWeekIndex)
@@ -77,6 +79,7 @@ fun DashboardScreen(
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var selectedRoutine by remember { mutableStateOf<Routine?>(null) }
     var activeRoutineIdForMilestoneVerification by remember { mutableStateOf<String?>(null) }
+    var activeTaskForTimer by remember { mutableStateOf<DailyTask?>(null) }
     var revealedGoal by remember { mutableStateOf<SubGoal?>(null) }
 
     // Helper function to find assigned subgoal for a given week index
@@ -204,7 +207,7 @@ fun DashboardScreen(
                 .fillMaxWidth()
         ) {
             val filteredTasks = remember(state.selectedWeekTasks, taskDayOfWeek) {
-                state.selectedWeekTasks.filter { it.dayOfWeek == taskDayOfWeek }
+                state.selectedWeekTasks.filter { it.dayOfWeek == taskDayOfWeek }.sortedWithTimeOrder()
             }
             val completedCount = if (isHistorical) {
                 state.selectedWeekTasks.count { it.isCompleted == 1 }
@@ -255,6 +258,7 @@ fun DashboardScreen(
                     }
                 },
                 onDeleteTask = onDeleteTask,
+                onOpenTimerDialog = { task -> activeTaskForTimer = task },
                 modifier = Modifier.weight(1f)
             )
 
@@ -314,6 +318,20 @@ fun DashboardScreen(
                     onIncrementRoutineCompletion(routineId)
                 }
                 activeRoutineIdForMilestoneVerification = null
+            }
+        )
+    }
+
+    // Task Timer Setting Dialog
+    if (activeTaskForTimer != null) {
+        TaskTimerDialog(
+            task = activeTaskForTimer!!,
+            onDismiss = { activeTaskForTimer = null },
+            onSaveTimer = { startTime, endTime ->
+                activeTaskForTimer?.let { task ->
+                    onUpdateTaskTimer(task, startTime, endTime)
+                }
+                activeTaskForTimer = null
             }
         )
     }
@@ -767,6 +785,7 @@ fun TaskListSectionComponent(
     routines: List<Routine>,
     onToggleTask: (DailyTask) -> Unit,
     onDeleteTask: (String) -> Unit,
+    onOpenTimerDialog: (DailyTask) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -800,7 +819,7 @@ fun TaskListSectionComponent(
                         }
 
                         items(
-                            items = dayTasks,
+                            items = dayTasks.sortedWithTimeOrder(),
                             key = { it.taskId }
                         ) { task ->
                             TaskItemRowComponent(
@@ -810,7 +829,8 @@ fun TaskListSectionComponent(
                                 onToggle = onToggleTask,
                                 onDelete = onDeleteTask,
                                 categories = categories,
-                                routines = routines
+                                routines = routines,
+                                onOpenTimerDialog = onOpenTimerDialog
                             )
                         }
 
@@ -839,7 +859,8 @@ fun TaskListSectionComponent(
                             onToggle = onToggleTask,
                             onDelete = onDeleteTask,
                             categories = categories,
-                            routines = routines
+                            routines = routines,
+                            onOpenTimerDialog = onOpenTimerDialog
                         )
                     }
                 }

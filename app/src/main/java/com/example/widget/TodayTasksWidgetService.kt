@@ -7,6 +7,7 @@ import android.widget.RemoteViewsService
 import com.example.R
 import com.example.data.AppDatabase
 import com.example.data.DailyTask
+import com.example.data.sortedWithTimeOrder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -43,7 +44,7 @@ class TodayTasksRemoteViewsFactory(private val context: Context) : RemoteViewsSe
                     val currentWeekIndex = (elapsedMillis / weekInMillis).toInt().coerceIn(0, meta.totalWeeks - 1)
 
                     val currentDay = com.example.ui.Utils.getTodayDayIndex(inceptionTimestamp, currentWeekIndex)
-                    tasksList = dao.getTasksForWeekAndDay(currentWeekIndex, currentDay).first()
+                    tasksList = dao.getTasksForWeekAndDay(currentWeekIndex, currentDay).first().sortedWithTimeOrder()
                 } else {
                     tasksList = emptyList()
                 }
@@ -65,6 +66,7 @@ class TodayTasksRemoteViewsFactory(private val context: Context) : RemoteViewsSe
         val task = tasksList[position]
         val isCompleted = task.isCompleted == 1
         val isRecurring = task.habitId != null || task.routineId != null
+        val hasTimer = !task.startTime.isNullOrBlank() && !task.endTime.isNullOrBlank()
 
         val views = RemoteViews(context.packageName, R.layout.widget_task_item)
 
@@ -87,7 +89,14 @@ class TodayTasksRemoteViewsFactory(private val context: Context) : RemoteViewsSe
             views.setTextColor(R.id.widget_task_points, 0xFFA1A1AA.toInt())
         }
 
-        // 3. Recurring Tag
+        // 3. Time Display & Recurring Tag
+        if (hasTimer) {
+            views.setViewVisibility(R.id.widget_task_time, android.view.View.VISIBLE)
+            views.setTextViewText(R.id.widget_task_time, "⏰ ${task.startTime} - ${task.endTime}")
+        } else {
+            views.setViewVisibility(R.id.widget_task_time, android.view.View.GONE)
+        }
+
         if (isRecurring) {
             views.setTextViewText(R.id.widget_task_badge, "↻ RECURRING")
         } else {

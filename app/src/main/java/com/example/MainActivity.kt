@@ -1,9 +1,14 @@
 package com.example
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.DashboardScreen
@@ -33,13 +39,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
+                val context = LocalContext.current
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { _ -> }
+
+                LaunchedEffect(Unit) {
+                    com.example.util.TaskNotificationScheduler.ensureNotificationChannel(context)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     contentWindowInsets = WindowInsets.safeDrawing
                 ) { innerPadding ->
-                    val context = LocalContext.current.applicationContext as android.app.Application
+                    val app = LocalContext.current.applicationContext as android.app.Application
                     val viewModel: LifeTrackerViewModel = viewModel(
-                        factory = LifeTrackerViewModel.Factory(context)
+                        factory = LifeTrackerViewModel.Factory(app)
                     )
                     LifeTrackerApp(
                         viewModel = viewModel,
@@ -177,7 +197,8 @@ fun LifeTrackerApp(
                             onToggleTask = { task -> viewModel.toggleTaskCompletion(task) },
                             onDeleteTask = { taskId -> viewModel.deleteTask(taskId) },
                             onReset = { viewModel.resetTimeline() },
-                            onIncrementRoutineCompletion = { routineId -> viewModel.incrementRoutineCompletion(routineId) }
+                            onIncrementRoutineCompletion = { routineId -> viewModel.incrementRoutineCompletion(routineId) },
+                            onUpdateTaskTimer = { task, start, end -> viewModel.updateTaskTimer(task, start, end) }
                         )
                     }
                 }
