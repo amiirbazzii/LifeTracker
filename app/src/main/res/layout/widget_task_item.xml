@@ -50,17 +50,34 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/widget_task_time"
+            <LinearLayout
+                android:id="@+id/widget_task_time_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⏰ 09:00 - 10:30"
-                android:textColor="#39FF14"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:typeface="monospace"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:layout_marginRight="6dp"
-                android:visibility="gone" />
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/widget_task_time_icon"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:src="@drawable/ic_clock_outline"
+                    android:tint="#39FF14"
+                    android:layout_marginRight="3dp"
+                    android:contentDescription="Time" />
+
+                <TextView
+                    android:id="@+id/widget_task_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="09:00 - 10:30"
+                    android:textColor="#39FF14"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/widget_task_badge"

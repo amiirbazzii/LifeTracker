@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -563,7 +564,9 @@ fun TaskItemRowComponent(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         if (hasTimer) {
-                            Box(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
                                 modifier = Modifier
                                     .background(
                                         if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)
@@ -577,8 +580,14 @@ fun TaskItemRowComponent(
                                     )
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
+                                Icon(
+                                    painter = painterResource(id = com.example.R.drawable.ic_clock_outline),
+                                    contentDescription = null,
+                                    tint = if (isCompleted) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f) else GridLevel4,
+                                    modifier = Modifier.size(9.dp)
+                                )
                                 Text(
-                                    text = "⏰ ${task.startTime} - ${task.endTime}",
+                                    text = "${task.startTime} - ${task.endTime}",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 8.sp,
                                         fontFamily = FontFamily.Monospace,
@@ -631,10 +640,11 @@ fun TaskItemRowComponent(
                         .testTag("timer_button_${task.taskId}"),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "⏰",
-                        fontSize = 13.sp,
-                        modifier = Modifier.alpha(if (hasTimer) 1f else 0.45f)
+                    Icon(
+                        painter = painterResource(id = com.example.R.drawable.ic_clock_outline),
+                        contentDescription = "Task Timer",
+                        tint = if (hasTimer) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        modifier = Modifier.size(16.dp)
                     )
                 }
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,16 +81,27 @@ fun TaskTimerDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "⏰ [TASK TIMER]",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = DesignTokens.LetterSpacingWide,
-                        fontSize = 14.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = com.example.R.drawable.ic_clock_outline),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "[TASK TIMER]",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = DesignTokens.LetterSpacingWide,
+                            fontSize = 14.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .size(28.dp)

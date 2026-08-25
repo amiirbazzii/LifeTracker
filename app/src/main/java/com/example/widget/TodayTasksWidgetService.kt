@@ -91,10 +91,10 @@ class TodayTasksRemoteViewsFactory(private val context: Context) : RemoteViewsSe
 
         // 3. Time Display & Recurring Tag
         if (hasTimer) {
-            views.setViewVisibility(R.id.widget_task_time, android.view.View.VISIBLE)
-            views.setTextViewText(R.id.widget_task_time, "⏰ ${task.startTime} - ${task.endTime}")
+            views.setViewVisibility(R.id.widget_task_time_container, android.view.View.VISIBLE)
+            views.setTextViewText(R.id.widget_task_time, "${task.startTime} - ${task.endTime}")
         } else {
-            views.setViewVisibility(R.id.widget_task_time, android.view.View.GONE)
+            views.setViewVisibility(R.id.widget_task_time_container, android.view.View.GONE)
         }
 
         if (isRecurring) {

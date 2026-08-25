@@ -474,7 +474,7 @@ class LifeTrackerViewModel(
                     val scheduled = com.example.util.TaskNotificationScheduler.scheduleTaskNotification(application, meta, updated)
                     if (scheduled) {
                         val endMsg = if (!endTime.isNullOrBlank()) " - $endTime" else ""
-                        showToast("⏰ Alarm set for $startTime$endMsg")
+                        showToast("Timer set for $startTime$endMsg")
                     } else {
                         showToast("Timer saved: $startTime")
                     }

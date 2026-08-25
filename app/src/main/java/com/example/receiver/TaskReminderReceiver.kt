@@ -42,8 +42,8 @@ class TaskReminderReceiver : BroadcastReceiver() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notification = NotificationCompat.Builder(context, TaskNotificationScheduler.CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("⏰ TASK STARTED: ${taskTitle.uppercase()}")
+            .setSmallIcon(R.drawable.ic_clock_outline)
+            .setContentTitle("TASK STARTED: ${taskTitle.uppercase()}")
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
             .setSound(defaultSoundUri)
